@@ -1,30 +1,186 @@
 @import url('https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap');
 
 :root {
-  --terminal-bg: #000507;
-  --terminal-text: #33ccff;
-  --terminal-highlight: #55ffaa;
-  --terminal-dim: #115566;
-  --terminal-warning: #ffcc00;
-  --terminal-danger: #ff3355;
-  --terminal-header: #002233;
-  --terminal-border: #114455;
-  --terminal-glow: rgba(51, 204, 255, 0.4);
+    --terminal-bg: #000507;
+    --terminal-text: #33ccff;
+    --terminal-highlight: #55ffaa;
+    --terminal-dim: #115566;
+    --terminal-warning: #ffcc00;
+    --terminal-danger: #ff3355;
+    --terminal-header: #002233;
+    --terminal-border: #114455;
+    --terminal-glow: rgba(51, 204, 255, 0.4);
 }
 
 body {
-  background-color: #111;
-  font-family: 'Share Tech Mono', monospace;
-  color: var(--terminal-text);
-  margin: 0;
-  padding: 0;
+    background-color: #111;
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--terminal-text);
+    margin: 0;
+    padding: 0;
 }
 
 #app {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
 }
 
-/* Additional styles for game UI will be added as components are implemented */
+.terminal-container {
+    width: 100%;
+    max-width: 800px;
+    height: 600px;
+    background-color: var(--terminal-bg);
+    border: 2px solid var(--terminal-border);
+    border-radius: 8px;
+    box-shadow: 0 0 20px var(--terminal-glow);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 20px;
+}
+
+.terminal-output {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 10px;
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
+.terminal-output::-webkit-scrollbar {
+    width: 8px;
+}
+
+.terminal-output::-webkit-scrollbar-track {
+    background: var(--terminal-bg);
+}
+
+.terminal-output::-webkit-scrollbar-thumb {
+    background: var(--terminal-border);
+    border-radius: 4px;
+}
+
+.terminal-input-line {
+    display: flex;
+    align-items: center;
+    padding: 5px;
+    background-color: var(--terminal-header);
+    border-radius: 4px;
+}
+
+.terminal-prompt {
+    color: var(--terminal-highlight);
+    margin-right: 8px;
+}
+
+.terminal-input {
+    flex-grow: 1;
+    background: none;
+    border: none;
+    color: var(--terminal-text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 16px;
+    outline: none;
+}
+
+/* Room name styling */
+.terminal-output div {
+    margin-bottom: 8px;
+    white-space: pre-wrap;
+    line-height: 1.5;
+}
+
+.terminal-output .room-name {
+    color: var(--terminal-highlight);
+    font-weight: bold;
+}
+
+.terminal-output .direction {
+    color: var(--terminal-warning);
+}
+
+/* Command styling */
+.terminal-output div:has(span.command) {
+    color: var(--terminal-highlight);
+}
+
+/* Error message styling */
+.terminal-output div.error {
+    color: var(--terminal-danger);
+}
+
+/* Loading indicator styles */
+.loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--terminal-bg);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 1;
+    transition: opacity 0.5s ease-out;
+}
+
+.loading-text {
+    color: var(--terminal-text);
+    font-size: 24px;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.3; }
+    50% { opacity: 1; }
+    100% { opacity: 0.3; }
+}
+
+/* Hide loading screen when game is initialized */
+.loading-screen.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Warning message styling */
+.terminal-output div.warning {
+    color: var(--terminal-warning);
+}
+
+/* Help text styling */
+.terminal-output div.help {
+    color: var(--terminal-dim);
+}
+
+/* Room exits styling */
+.terminal-output div:has(span.direction) {
+    color: var(--terminal-text);
+}
+
+/* Command input history styling */
+.terminal-output div:has(> span.command) {
+    color: var(--terminal-highlight);
+    margin-top: 4px;
+}
+
+/* Clear some space after major sections */
+.terminal-output div:has(span.room-name) {
+    margin-top: 12px;
+    margin-bottom: 12px;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--terminal-dim);
+}
+
+/* Animation for text appearance */
+@keyframes text-appear {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.terminal-output div {
+    animation: text-appear 0.2s ease-out;
+}

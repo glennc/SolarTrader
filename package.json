@@ -3,10 +3,14 @@
   "version": "0.1.0",
   "description": "Solar Clipper: First Light - Text-based ship management game",
   "scripts": {
-    "start": "parcel index.html --open",
-    "build": "parcel build index.html"
+    "start": "parcel index.html --open --cache-dir ./.parcel-cache --no-cache",
+    "build": "parcel build index.html --cache-dir ./.parcel-cache",
+    "clean": "rimraf .parcel-cache dist"
   },
   "devDependencies": {
-    "parcel": "^2.0.0"
+    "parcel": "^2.0.0",
+    "rimraf": "^5.0.0",
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
   }
 }
