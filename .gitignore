@@ -1,0 +1,48 @@
+# Node modules
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# VSCode settings
+.vscode/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.*
+
+# Misc
+*.log
+*.tmp
+
+# Parcel cache
+.parcel-cache/
+parcelcache/
+
+# Ignore coverage reports
+coverage/
+
+# Ignore compiled JS files (if any)
+*.js
+*.js.map
+
+# Ignore IDE files
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

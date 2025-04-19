@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap');
+
+:root {
+  --terminal-bg: #000507;
+  --terminal-text: #33ccff;
+  --terminal-highlight: #55ffaa;
+  --terminal-dim: #115566;
+  --terminal-warning: #ffcc00;
+  --terminal-danger: #ff3355;
+  --terminal-header: #002233;
+  --terminal-border: #114455;
+  --terminal-glow: rgba(51, 204, 255, 0.4);
+}
+
+body {
+  background-color: #111;
+  font-family: 'Share Tech Mono', monospace;
+  color: var(--terminal-text);
+  margin: 0;
+  padding: 0;
+}
+
+#app {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Additional styles for game UI will be added as components are implemented */

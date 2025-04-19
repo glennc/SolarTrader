@@ -1,0 +1,12 @@
+{
+  "name": "solar-clipper",
+  "version": "0.1.0",
+  "description": "Solar Clipper: First Light - Text-based ship management game",
+  "scripts": {
+    "start": "parcel index.html --open",
+    "build": "parcel build index.html"
+  },
+  "devDependencies": {
+    "parcel": "^2.0.0"
+  }
+}

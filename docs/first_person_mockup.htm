@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Solar Clipper: First-Person View</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap');
+    
+    :root {
+      --terminal-bg: #000507;
+      --terminal-text: #33ccff;
+      --terminal-highlight: #55ffaa;
+      --terminal-dim: #115566;
+      --terminal-warning: #ffcc00;
+      --terminal-danger: #ff3355;
+      --terminal-header: #002233;
+      --terminal-border: #114455;
+      --terminal-glow: rgba(51, 204, 255, 0.4);
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      background-color: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--terminal-text);
+      overflow: hidden;
+    }
+    
+    .game-container {
+      width: 90%;
+      max-width: 800px;
+      height: 90vh;
+      max-height: 600px;
+      background-color: var(--terminal-bg);
+      border: 2px solid var(--terminal-border);
+      border-radius: 8px;
+      box-shadow: 0 0 20px var(--terminal-glow), inset 0 0 10px rgba(0, 0, 0, 0.8);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* CRT scan lines effect */
+    .game-container::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(
+        rgba(51, 204, 255, 0.03) 50%, 
+        rgba(0, 0, 0, 0) 51%
+      );
+      background-size: 100% 4px;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0.15;
+      animation: scanlines 8s linear infinite;
+    }
+    
+    /* Subtle flicker effect */
+    .game-container::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(51, 204, 255, 0.02);
+      opacity: 0;
+      z-index: 9;
+      pointer-events: none;
+      animation: flicker 6s infinite;
+    }
+    
+    @keyframes scanlines {
+      0% { background-position: 0 0; }
+      100% { background-position: 0 100%; }
+    }
+    
+    @keyframes flicker {
+      0% { opacity: 0; }
+      5% { opacity: 0.1; }
+      10% { opacity: 0; }
+      15% { opacity: 0; }
+      20% { opacity: 0.1; }
+      25% { opacity: 0; }
+      30% { opacity: 0; }
+      35% { opacity: 0.05; }
+      40% { opacity: 0; }
+      45% { opacity: 0; }
+      50% { opacity: 0.1; }
+      55% { opacity: 0; }
+      60% { opacity: 0; }
+      65% { opacity: 0; }
+      70% { opacity: 0.1; }
+      75% { opacity: 0; }
+      80% { opacity: 0; }
+      85% { opacity: 0.05; }
+      90% { opacity: 0; }
+      95% { opacity: 0; }
+      100% { opacity: 0; }
+    }
+    
+    .status-bar {
+      background-color: var(--terminal-header);
+      padding: 8px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--terminal-border);
+      text-shadow: 0 0 5px var(--terminal-glow);
+      z-index: 2;
+    }
+    
+    .location {
+      font-size: 16px;
+      letter-spacing: 1px;
+      color: var(--terminal-highlight);
+    }
+    
+    .status-indicators {
+      display: flex;
+      gap: 15px;
+    }
+    
+    .indicator {
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+    }
+    
+    .indicator-icon {
+      width: 14px;
+      height: 14px;
+      margin-right: 6px;
+      border-radius: 50%;
+    }
+    
+    .indicator-rest {
+      background-color: var(--terminal-highlight);
+      box-shadow: 0 0 5px var(--terminal-highlight);
+    }
+    
+    .indicator-nutrition {
+      background-color: var(--terminal-warning);
+      box-shadow: 0 0 5px var(--terminal-warning);
+    }
+    
+    .indicator-alert {
+      background-color: var(--terminal-danger);
+      box-shadow: 0 0 5px var(--terminal-danger);
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 0.7; }
+      50% { opacity: 1; }
+      100% { opacity: 0.7; }
+    }
+    
+    .game-view {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      padding: 15px;
+      overflow-y: auto;
+    }
+    
+    .time-display {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      font-family: 'VT323', monospace;
+      font-size: 16px;
+      color: var(--terminal-dim);
+      text-align: right;
+    }
+    
+    .room-title {
+      margin-top: 20px;
+      font-size: 22px;
+      color: var(--terminal-highlight);
+      margin-bottom: 10px;
+      text-shadow: 0 0 8px rgba(85, 255, 170, 0.4);
+    }
+    
+    .room-description {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 16px;
+      line-height: 1.5;
+      color: var(--terminal-text);
+      margin-bottom: 20px;
+      opacity: 0;
+      animation: fade-in 1s forwards;
+    }
+    
+    @keyframes fade-in {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    
+    .interaction-list {
+      margin-top: 20px;
+    }
+    
+    .interaction-header {
+      font-size: 16px;
+      color: var(--terminal-dim);
+      margin-bottom: 10px;
+      border-bottom: 1px dashed var(--terminal-dim);
+      padding-bottom: 5px;
+    }
+    
+    .interactive-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .item {
+      background-color: rgba(17, 85, 102, 0.3);
+      border: 1px solid var(--terminal-dim);
+      color: var(--terminal-text);
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .item:hover {
+      background-color: var(--terminal-dim);
+      color: var(--terminal-highlight);
+      box-shadow: 0 0 8px var(--terminal-glow);
+    }
+    
+    .exits {
+      margin-top: 20px;
+    }
+    
+    .exit-item {
+      display: inline-block;
+      background-color: rgba(51, 204, 255, 0.1);
+      border: 1px solid var(--terminal-dim);
+      color: var(--terminal-text);
+      padding: 5px 10px;
+      margin-right: 8px;
+      margin-bottom: 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .exit-item:hover {
+      background-color: rgba(51, 204, 255, 0.3);
+      color: var(--terminal-highlight);
+      box-shadow: 0 0 8px var(--terminal-glow);
+    }
+    
+    .exit-item::before {
+      content: "»";
+      margin-right: 5px;
+      color: var(--terminal-highlight);
+    }
+    
+    .command-input {
+      margin-top: auto;
+      margin-bottom: 5px;
+      display: flex;
+      background-color: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--terminal-dim);
+      padding: 10px;
+      border-radius: 4px;
+    }
+    
+    .command-prompt {
+      color: var(--terminal-highlight);
+      margin-right: 10px;
+    }
+    
+    .command-field {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--terminal-text);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 16px;
+      outline: none;
+    }
+    
+    .typing-effect {
+      overflow: hidden;
+      border-right: 2px solid var(--terminal-highlight);
+      white-space: nowrap;
+      margin: 0;
+      letter-spacing: 0.5px;
+      animation: 
+        typing 3.5s steps(40, end),
+        blink-caret 0.75s step-end infinite;
+    }
+    
+    @keyframes typing {
+      from { width: 0 }
+      to { width: 100% }
+    }
+    
+    @keyframes blink-caret {
+      from, to { border-color: transparent }
+      50% { border-color: var(--terminal-highlight) }
+    }
+    
+    /* Custom scrollbar */
+    .game-view::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .game-view::-webkit-scrollbar-track {
+      background: var(--terminal-header);
+    }
+    
+    .game-view::-webkit-scrollbar-thumb {
+      background: var(--terminal-dim);
+      border-radius: 4px;
+    }
+    
+    .game-view::-webkit-scrollbar-thumb:hover {
+      background: var(--terminal-text);
+    }
+    
+    .notification {
+      background-color: rgba(85, 255, 170, 0.1);
+      border-left: 3px solid var(--terminal-highlight);
+      padding: 10px;
+      margin: 15px 0;
+      animation: notify-fade 5s forwards;
+    }
+    
+    @keyframes notify-fade {
+      0% { opacity: 0; transform: translateY(-10px); }
+      10% { opacity: 1; transform: translateY(0); }
+      90% { opacity: 1; }
+      100% { opacity: 0.3; }
+    }
+    
+    .warning-notification {
+      background-color: rgba(255, 204, 0, 0.1);
+      border-left: 3px solid var(--terminal-warning);
+    }
+    
+    .datapad {
+      display: inline-block;
+      color: var(--terminal-highlight);
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    
+    .datapad:hover {
+      text-shadow: 0 0 5px var(--terminal-highlight);
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <div class="status-bar">
+      <div class="location">LOCATION: ENGINE ROOM</div>
+      <div class="status-indicators">
+        <div class="indicator">
+          <div class="indicator-icon indicator-rest"></div>
+          <span>REST: 72%</span>
+        </div>
+        <div class="indicator">
+          <div class="indicator-icon indicator-nutrition"></div>
+          <span>FOOD: 54%</span>
+        </div>
+        <div class="indicator">
+          <div class="indicator-icon indicator-alert"></div>
+          <span>ALERT</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="game-view">
+      <div class="time-display">
+        SHIP TIME: 04:37:12<br>
+        DAY: 2 / 7
+      </div>
+      
+      <div class="room-title">Engine Room</div>
+      
+      <div class="room-description typing-effect">
+        The heart of your ship thrums with energy, a comfortable rhythm you've grown accustomed to over months of solo flight. The engine room is compact but efficiently designed, with the main reactor column glowing a soft blue in the center. Various pipes and conduits run along the walls, pulsing with coolant and power.
+      </div>
+      
+      <div class="room-description">
+        A persistent warning light flashes on the engineering console, casting intermittent amber reflections across the polished metal flooring. Something's not right with the coolant system.
+      </div>
+      
+      <div class="notification warning-notification">
+        Engine coolant pressure has dropped to 76% - recommended maintenance required
+      </div>
+      
+      <div class="interaction-list">
+        <div class="interaction-header">You can interact with:</div>
+        <div class="interactive-items">
+          <div class="item">Engineering Console</div>
+          <div class="item">Maintenance Toolkit</div>
+          <div class="item">Coolant Valves</div>
+          <div class="item">Your <span class="datapad">Datapad</span></div>
+          <div class="item">System Diagnostics Panel</div>
+        </div>
+      </div>
+      
+      <div class="exits">
+        <div class="interaction-header">Exits:</div>
+        <div class="exit-item">Bridge</div>
+        <div class="exit-item">Maintenance Bay</div>
+        <div class="exit-item">Corridor</div>
+      </div>
+      
+      <div class="command-input">
+        <span class="command-prompt">&gt;</span>
+        <input type="text" class="command-field" placeholder="Enter command (e.g., 'check coolant valves' or 'go to bridge')">
+      </div>
+    </div>
+  </div>
+</body>
+</html>
