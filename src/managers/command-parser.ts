@@ -7,6 +7,18 @@ import { InterfaceManager } from './interface-manager';
 export class CommandParser {
     private worldManager: WorldManager;
     private interfaceManager: InterfaceManager;
+    
+    // Common interaction verbs that the player might use
+    private interactionVerbs: string[] = [
+        'examine', 'look at', 'inspect', 'check',  // Observation
+        'use', 'activate', 'operate', 'start',     // Activation
+        'open', 'close', 'lock', 'unlock',         // State changes
+        'push', 'pull', 'turn', 'press',           // Physical interactions
+        'take', 'get', 'grab', 'pick up',          // Item acquisition
+        'drop', 'put down', 'place',               // Item placement
+        'read', 'access',                          // Information retrieval
+        'repair', 'fix', 'maintain'                // Maintenance
+    ];
 
     constructor(worldManager: WorldManager, interfaceManager: InterfaceManager) {
         this.worldManager = worldManager;
@@ -16,7 +28,6 @@ export class CommandParser {
 
     /**
      * Parses the raw input string from the user.
-     * For now, it only handles basic movement commands.
      * @param rawInput The raw string entered by the user.
      */
     parse(rawInput: string): void {
@@ -27,6 +38,46 @@ export class CommandParser {
 
         console.log(`CommandParser: Parsing input "${input}"`);
 
+        // Split input into words
+        const parts = input.split(/\s+/); // Split by whitespace
+        let command = parts[0];
+        let argument = parts.length > 1 ? parts.slice(1).join(" ") : null;
+
+        // Handle movement commands
+        const moveResult = this.handleMovementCommand(command, argument);
+        if (moveResult) {
+            return; // Movement command was handled
+        }
+        
+        // Handle general look command (no specific target)
+        if ((command === "look" || command === "l") && !argument) {
+            console.log("CommandParser: Executing LOOK command.");
+            this.interfaceManager.render(); // Re-render the current view
+            return;
+        }
+        
+        // Handle interactions with objects
+        const interactionResult = this.handleInteractionCommand(input);
+        if (interactionResult) {
+            return; // Interaction was handled
+        }
+        
+        // Handle help command
+        if (command === "help") {
+            this.displayHelp();
+            return;
+        }
+        
+        // If we get here, the command wasn't recognized
+        console.log(`CommandParser: Unknown command "${input}".`);
+        this.outputMessage(`Unknown command: "${input}". Type "help" for a list of commands.`);
+    }
+    
+    /**
+     * Handle movement commands
+     * @returns true if the command was a movement command, false otherwise
+     */
+    private handleMovementCommand(command: string, argument: string | null): boolean {
         // Simple movement command parsing (can be expanded significantly)
         // Common movement commands: go <direction>, n, s, e, w, u, d
         const moveKeywords = ["go", "move", "walk", "run"];
@@ -35,13 +86,13 @@ export class CommandParser {
             "s": "south", "south": "south",
             "e": "east", "east": "east",
             "w": "west", "west": "west",
-            "u": "up", "up": "up", // Assuming 'up'/'down' might be valid exits
-            "d": "down", "down": "down"
+            "u": "up", "up": "up", 
+            "d": "down", "down": "down",
+            "fore": "fore", "forward": "fore", "f": "fore",
+            "aft": "aft", "a": "aft", "backward": "aft", "back": "aft",
+            "port": "port", "p": "port", "left": "port",
+            "starboard": "starboard", "sb": "starboard", "right": "starboard"
         };
-
-        const parts = input.split(/\s+/); // Split by whitespace
-        let command = parts[0];
-        let argument = parts.length > 1 ? parts.slice(1).join(" ") : null;
 
         let direction: string | null = null;
 
@@ -51,13 +102,7 @@ export class CommandParser {
         } else if (moveKeywords.includes(command) && argument && directionAliases[argument]) {
             // Multi-word command (e.g., "go north")
             direction = directionAliases[argument];
-        } else if (command === "look" || command === "l") {
-             // Handle 'look' command - just re-render
-             console.log("CommandParser: Executing LOOK command.");
-             this.interfaceManager.render(); // Re-render the current view
-             return; // Exit after handling look
         }
-
 
         if (direction) {
             console.log(`CommandParser: Executing MOVE command (Direction: ${direction}).`);
@@ -66,15 +111,114 @@ export class CommandParser {
                 // Re-render the view after successful movement
                 this.interfaceManager.render();
             } else {
-                // Optionally provide feedback via the interface/renderer
-                // For now, WorldManager logs the failure. We could add:
-                // this.interfaceManager.renderer.updateOutput("You can't go that way.");
+                // Provide feedback for failed movement
+                this.outputMessage(`You can't go ${direction} from here.`);
             }
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Handle interactions with objects
+     * @returns true if the command was an interaction, false otherwise
+     */
+    private handleInteractionCommand(input: string): boolean {
+        const currentCompartment = this.worldManager.getCurrentCompartment();
+        if (!currentCompartment) {
+            return false;
+        }
+        
+        // Attempt to extract a verb and object from the input
+        const { verb, object } = this.extractVerbAndObject(input);
+        
+        if (!verb || !object) {
+            return false; // Not an interaction command
+        }
+        
+        // Find the object to interact with
+        const interactableObject = currentCompartment.findInteractableObject(object);
+        
+        if (!interactableObject) {
+            this.outputMessage(`You don't see a ${object} here.`);
+            return true; // It was an interaction attempt, even though it failed
+        }
+        
+        // Attempt the interaction
+        const result = interactableObject.interact(verb);
+        this.outputMessage(result);
+        
+        return true;
+    }
+    
+    /**
+     * Extract a verb and object from an input string
+     * Example: "examine console" -> { verb: "examine", object: "console" }
+     */
+    private extractVerbAndObject(input: string): { verb: string | null, object: string | null } {
+        // Special case for "look at" which is two words
+        if (input.startsWith("look at ")) {
+            const object = input.substring("look at ".length).trim();
+            return { verb: "look at", object: this.cleanObjectName(object) };
+        }
+        
+        // Try to match against our known interaction verbs
+        for (const verb of this.interactionVerbs) {
+            if (input.startsWith(verb + " ")) {
+                const object = input.substring(verb.length).trim();
+                return { verb, object: this.cleanObjectName(object) };
+            }
+        }
+        
+        // No matching verb found
+        return { verb: null, object: null };
+    }
+    
+    /**
+     * Removes articles and normalizes object names
+     * Converts "the nav console", "a chair", etc. to "nav console", "chair"
+     */
+    private cleanObjectName(objectName: string): string {
+        // Remove leading articles (the, a, an)
+        return objectName.replace(/^(the|a|an)\s+/i, '');
+    }
+    
+    /**
+     * Display help information
+     */
+    private displayHelp(): void {
+        const helpText = `
+SOLAR CLIPPER: FIRST LIGHT - Command Help
+
+Movement:
+  go [direction]   - Move in a direction (north, south, east, west, up, down, fore, aft, port, starboard)
+  n, s, e, w, etc. - Shorthand for directions
+
+Looking:
+  look             - Look around the current compartment
+  examine [object] - Look at a specific object
+  look at [object] - Same as examine
+
+Interactions:
+  use [object]     - Use or operate an object
+  take [object]    - Try to pick up an object
+  open [object]    - Try to open an object
+  
+Other:
+  help             - Show this help text
+`;
+        this.outputMessage(helpText);
+    }
+    
+    /**
+     * Output a message to the player
+     */
+    private outputMessage(message: string): void {
+        if (this.interfaceManager.renderer) {
+            this.interfaceManager.renderer.updateOutput(message);
         } else {
-            console.log(`CommandParser: Unknown command "${input}".`);
-            // Provide feedback for unknown commands
-            // this.interfaceManager.renderer.updateOutput(`Unknown command: "${input}"`);
-            // For now, just log it.
+            console.log(`OUTPUT: ${message}`);
         }
     }
 }

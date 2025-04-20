@@ -2,25 +2,84 @@
  * Handles direct manipulation of the HTML DOM to display game output.
  */
 export class DOMRenderer {
-    private outputElement: HTMLElement | null;
-    private locationElement: HTMLElement | null;
-    private inputElement: HTMLInputElement | null; // Assuming an input field exists
+    private container: HTMLElement;
+    private outputElement: HTMLElement;
+    private locationElement: HTMLElement;
+    private inputElement: HTMLInputElement;
+    private commandHandler: ((input: string) => void) | null = null;
 
-    constructor(outputElementId: string = 'output', locationElementId: string = 'location', inputElementId: string = 'input') {
-        this.outputElement = document.getElementById(outputElementId);
-        this.locationElement = document.getElementById(locationElementId);
-        this.inputElement = document.getElementById(inputElementId) as HTMLInputElement;
-
-        if (!this.outputElement) {
-            console.error(`DOMRenderer: Element with ID "${outputElementId}" not found.`);
-        }
-        if (!this.locationElement) {
-            console.error(`DOMRenderer: Element with ID "${locationElementId}" not found.`);
-        }
-         if (!this.inputElement) {
-            console.warn(`DOMRenderer: Input element with ID "${inputElementId}" not found.`);
-        }
+    constructor(container: HTMLElement) {
+        this.container = container;
+        
+        // Create the interface elements
+        this.createInterface();
+        
         console.log("DOMRenderer initialized.");
+    }
+    
+    /**
+     * Creates the DOM structure for the game interface
+     */
+    private createInterface(): void {
+        // Clear the container
+        this.container.innerHTML = '';
+        
+        // Create the interface structure
+        const interfaceContainer = document.createElement('div');
+        interfaceContainer.className = 'game-interface';
+        
+        // Location display
+        this.locationElement = document.createElement('div');
+        this.locationElement.className = 'location-display';
+        interfaceContainer.appendChild(this.locationElement);
+        
+        // Output area
+        this.outputElement = document.createElement('div');
+        this.outputElement.className = 'terminal-output';
+        interfaceContainer.appendChild(this.outputElement);
+        
+        // Input area
+        const inputContainer = document.createElement('div');
+        inputContainer.className = 'terminal-input-container';
+        
+        const prompt = document.createElement('span');
+        prompt.className = 'terminal-prompt';
+        prompt.textContent = '> ';
+        inputContainer.appendChild(prompt);
+        
+        this.inputElement = document.createElement('input');
+        this.inputElement.className = 'terminal-input';
+        this.inputElement.type = 'text';
+        this.inputElement.spellcheck = false;
+        
+        // Set up input event handling
+        this.inputElement.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                const command = this.inputElement.value;
+                if (command.trim() !== '') {
+                    this.updateOutput(`<span class="command-echo">> ${command}</span>`);
+                    this.clearInput();
+                    
+                    // Process the command
+                    if (this.commandHandler) {
+                        this.commandHandler(command);
+                    }
+                }
+            }
+        });
+        
+        inputContainer.appendChild(this.inputElement);
+        interfaceContainer.appendChild(inputContainer);
+        
+        // Add the interface to the container
+        this.container.appendChild(interfaceContainer);
+    }
+    
+    /**
+     * Set a handler function for commands entered by the user
+     */
+    setCommandHandler(handler: (input: string) => void): void {
+        this.commandHandler = handler;
     }
 
     /**
@@ -28,24 +87,22 @@ export class DOMRenderer {
      * @param text The text content to display. Can include HTML.
      */
     updateOutput(text: string): void {
-        if (this.outputElement) {
-            // Append new text, maybe clear old text depending on game design
-            // For now, let's append and add a line break
-            this.outputElement.innerHTML += text + '<br>';
-            // Scroll to bottom
-            this.outputElement.scrollTop = this.outputElement.scrollHeight;
-        } else {
-            console.error("DOMRenderer: Cannot update output, element not found.");
-        }
+        // Create a new output entry
+        const entry = document.createElement('div');
+        entry.className = 'output-entry';
+        entry.innerHTML = text;
+        
+        this.outputElement.appendChild(entry);
+        
+        // Scroll to bottom
+        this.outputElement.scrollTop = this.outputElement.scrollHeight;
     }
 
      /**
      * Clears the main output area.
      */
     clearOutput(): void {
-        if (this.outputElement) {
-            this.outputElement.innerHTML = '';
-        }
+        this.outputElement.innerHTML = '';
     }
 
     /**
@@ -53,28 +110,20 @@ export class DOMRenderer {
      * @param text The text content to display.
      */
     updateLocation(text: string): void {
-        if (this.locationElement) {
-            this.locationElement.textContent = text;
-        } else {
-            console.error("DOMRenderer: Cannot update location, element not found.");
-        }
+        this.locationElement.textContent = text;
     }
 
     /**
      * Clears the input field.
      */
     clearInput(): void {
-        if (this.inputElement) {
-            this.inputElement.value = '';
-        }
+        this.inputElement.value = '';
     }
 
     /**
      * Focuses the input field.
      */
     focusInput(): void {
-         if (this.inputElement) {
-            this.inputElement.focus();
-        }
+        this.inputElement.focus();
     }
 }

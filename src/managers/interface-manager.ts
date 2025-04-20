@@ -7,25 +7,56 @@ import { WorldManager } from './world-manager';
  */
 export class InterfaceManager {
     private activeInterface: UserInterface | null;
-    private renderer: DOMRenderer;
-    private worldManager: WorldManager; // To provide context to the interface
+    private interfaces: Map<string, UserInterface>;
+    public renderer: DOMRenderer;
+    private worldManager: WorldManager | null; // To provide context to the interface
 
-    constructor(renderer: DOMRenderer, worldManager: WorldManager) {
+    constructor(renderer: DOMRenderer) {
         this.activeInterface = null;
+        this.interfaces = new Map<string, UserInterface>();
         this.renderer = renderer;
-        this.worldManager = worldManager;
+        this.worldManager = null;
         console.log("InterfaceManager initialized.");
     }
 
     /**
-     * Sets the currently active user interface.
-     * @param ui The UserInterface instance to activate.
+     * Sets the world manager reference
      */
-    setActiveInterface(ui: UserInterface): void {
+    setWorldManager(worldManager: WorldManager): void {
+        this.worldManager = worldManager;
+    }
+
+    /**
+     * Registers a user interface with the manager
+     * @param name The name identifier for the interface
+     * @param ui The UserInterface instance to register
+     */
+    registerInterface(name: string, ui: UserInterface): void {
+        this.interfaces.set(name, ui);
+        console.log(`InterfaceManager: Registered interface "${name}".`);
+    }
+
+    /**
+     * Sets the currently active user interface by name.
+     * @param name The name of the interface to activate
+     */
+    setActiveInterface(name: string): void {
+        const ui = this.interfaces.get(name);
+        if (!ui) {
+            console.error(`InterfaceManager: No interface registered with name "${name}".`);
+            return;
+        }
+        
         this.activeInterface = ui;
-        this.activeInterface.setRenderer(this.renderer); // Provide renderer access
-        this.activeInterface.setWorldManager(this.worldManager); // Provide world context
-        console.log(`InterfaceManager: Active interface set to ${ui.constructor.name}.`);
+        
+        // Provide necessary resources to the interface
+        this.activeInterface.setRenderer(this.renderer);
+        
+        if (this.worldManager) {
+            this.activeInterface.setWorldManager(this.worldManager);
+        }
+        
+        console.log(`InterfaceManager: Active interface set to "${name}".`);
         this.render(); // Initial render of the new interface
     }
 
