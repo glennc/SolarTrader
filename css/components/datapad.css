@@ -1,0 +1,21 @@
+/* Datapad component styling */
+.datapad {
+    display: inline-block;
+    color: var(--terminal-highlight);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.datapad:hover {
+    text-shadow: 0 0 5px var(--terminal-highlight);
+}
+
+/* Animation for text appearance in datapads */
+@keyframes text-appear {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.datapad-content div {
+    animation: text-appear 0.3s ease-out;
+}

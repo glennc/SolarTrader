@@ -1,6 +1,7 @@
 import { BaseInteractableObject } from '../core/interactable-object';
 import { DOMRenderer } from '../interfaces/dom-renderer';
 import { InterfaceManager } from '../managers/interface-manager';
+import { loadStylesheet, unloadStylesheet } from './dom-css-loader';
 
 /**
  * Interface for objects that can display a dedicated system interface
@@ -20,12 +21,33 @@ export interface SystemInterface {
  */
 export abstract class BaseSystemInterface extends BaseInteractableObject implements SystemInterface {
     protected interfaceManager: InterfaceManager | null = null;
+    protected loadedStylesheetId: string | null = null;
     
     /**
      * Sets the interface manager reference
      */
     setInterfaceManager(manager: InterfaceManager): void {
         this.interfaceManager = manager;
+    }
+    
+    /**
+     * Loads CSS for this system interface
+     * @param cssPath Path to the CSS file
+     * @param id Unique identifier for the stylesheet
+     */
+    protected loadInterfaceCSS(cssPath: string, id: string): void {
+        loadStylesheet(cssPath, id);
+        this.loadedStylesheetId = id;
+    }
+    
+    /**
+     * Unloads CSS for this system interface
+     */
+    protected unloadInterfaceCSS(): void {
+        if (this.loadedStylesheetId) {
+            unloadStylesheet(this.loadedStylesheetId);
+            this.loadedStylesheetId = null;
+        }
     }
     
     /**

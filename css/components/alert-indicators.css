@@ -1,0 +1,48 @@
+/* Alert light and status indicators */
+.alert-light {
+    display: flex;
+    align-items: center;
+}
+
+.alert-indicator {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+}
+
+.alert-light-icon {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: var(--terminal-highlight);
+    margin-right: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    position: relative;
+    box-shadow: 0 0 5px var(--terminal-highlight);
+}
+
+/* Warning alert state */
+.alert-light.alert-active .alert-light-icon.alert-warning {
+    background-color: var(--terminal-warning);
+    box-shadow: 0 0 10px var(--terminal-warning);
+    animation: warning-blink 1s infinite;
+}
+
+/* Danger alert state */
+.alert-light.alert-active .alert-light-icon.alert-danger {
+    background-color: var(--terminal-danger);
+    box-shadow: 0 0 10px var(--terminal-danger);
+    animation: danger-blink 0.5s infinite;
+}
+
+@keyframes warning-blink {
+    0% { opacity: 0.7; }
+    50% { opacity: 1; }
+    100% { opacity: 0.7; }
+}
+
+@keyframes danger-blink {
+    0% { opacity: 0.7; }
+    50% { opacity: 1; }
+    100% { opacity: 0.7; }
+}

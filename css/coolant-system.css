@@ -1,0 +1,259 @@
+/* Coolant System Interface Styles */
+.system-diagram {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+.system-component {
+    background-color: rgba(17, 85, 102, 0.2);
+    border: 1px solid var(--terminal-dim);
+    padding: 10px;
+    border-radius: 4px;
+    text-align: center;
+    width: 100%;
+    max-width: 300px;
+}
+
+.connection-line {
+    width: 2px;
+    height: 20px;
+    background-color: var(--terminal-dim);
+}
+
+.connection-node {
+    width: 8px;
+    height: 8px;
+    background-color: var(--terminal-highlight);
+    border-radius: 50%;
+    box-shadow: 0 0 5px var(--terminal-highlight);
+}
+
+.coolant-system {
+    width: 100%;
+    max-width: 650px;
+    display: grid;
+    grid-template-columns: 1fr 3fr 1fr;
+    grid-template-rows: repeat(4, auto);
+    gap: 10px;
+    align-items: center;
+    margin: 0 auto 25px;
+    background-color: rgba(17, 85, 102, 0.07);
+    padding: 15px;
+    border: 1px solid var(--terminal-dim);
+    border-radius: 4px;
+}
+
+.system-label {
+    color: var(--terminal-dim);
+    font-size: 14px;
+    text-align: right;
+    padding-right: 10px;
+}
+
+.system-value {
+    color: var(--terminal-highlight);
+    font-size: 14px;
+    padding-left: 10px;
+}
+
+.system-warning {
+    color: var(--terminal-warning);
+}
+
+.system-critical {
+    color: var(--terminal-danger);
+}
+
+.coolant-pipe {
+    height: 10px;
+    background-color: rgba(51, 204, 255, 0.3);
+    border: 1px solid var(--terminal-dim);
+    position: relative;
+    margin: 5px 0;
+    overflow: hidden;
+}
+
+.coolant-flow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background: repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 10px,
+        rgba(51, 204, 255, 0.6) 10px,
+        rgba(51, 204, 255, 0.6) 20px
+    );
+    animation: flow 2s linear infinite;
+}
+
+@keyframes flow {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(20px); }
+}
+
+.coolant-warning {
+    background-color: rgba(255, 204, 0, 0.15);
+    border-left: 3px solid var(--terminal-warning);
+    padding: 10px;
+    margin: 15px 0;
+    animation: warning-flash 2s infinite;
+}
+
+@keyframes warning-flash {
+    0% { background-color: rgba(255, 204, 0, 0.1); }
+    50% { background-color: rgba(255, 204, 0, 0.2); }
+    100% { background-color: rgba(255, 204, 0, 0.1); }
+}
+
+.temperature-gauge {
+    width: 80%;
+    height: 25px;
+    background: linear-gradient(to right, 
+        rgba(85, 255, 170, 0.5) 0%, 
+        rgba(51, 204, 255, 0.5) 25%, 
+        rgba(255, 204, 0, 0.5) 50%, 
+        rgba(255, 100, 0, 0.5) 75%, 
+        rgba(255, 51, 85, 0.5) 100%
+    );
+    border: 1px solid var(--terminal-dim);
+    border-radius: 4px;
+    margin: 10px auto;
+    position: relative;
+}
+
+.temperature-indicator {
+    position: absolute;
+    top: -3px;
+    left: calc(var(--temp-value, 75%) - 2px);
+    width: 4px;
+    height: calc(100% + 6px);
+    background-color: white;
+    border-radius: 2px;
+    box-shadow: 0 0 5px white;
+}
+
+.temperature-value {
+    position: absolute;
+    bottom: -25px;
+    left: var(--temp-value, 75%);
+    transform: translateX(-50%);
+    font-size: 14px;
+    color: var(--terminal-text);
+    white-space: nowrap;
+}
+
+.valve-controls {
+    display: flex;
+    justify-content: space-between;
+    margin: 20px auto;
+    gap: 15px;
+    max-width: 650px;
+    background-color: rgba(17, 85, 102, 0.07);
+    padding: 15px;
+    border: 1px solid var(--terminal-dim);
+    border-radius: 4px;
+}
+
+.valve-control {
+    flex: 1;
+    text-align: center;
+}
+
+.valve-label {
+    color: var(--terminal-dim);
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.valve-slider-container {
+    width: 100%;
+    height: 25px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--terminal-dim);
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+}
+
+.valve-slider {
+    appearance: none;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    outline: none;
+    margin: 0;
+    z-index: 5;
+    position: relative;
+    cursor: pointer;
+}
+
+.valve-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 20px;
+    height: 25px;
+    background-color: var(--terminal-highlight);
+    border-radius: 2px;
+    box-shadow: 0 0 10px var(--terminal-glow);
+    cursor: pointer;
+}
+
+.valve-slider-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: var(--value, 50%);
+    background: linear-gradient(to right, rgba(51, 204, 255, 0.2), rgba(85, 255, 170, 0.3));
+    z-index: 1;
+    pointer-events: none;
+    transition: width 0.2s ease;
+}
+
+.valve-value {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--terminal-text);
+    font-size: 14px;
+    font-weight: bold;
+    z-index: 2;
+    pointer-events: none;
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+}
+
+.coolant-status-notification {
+    max-width: 650px;
+    margin: 20px auto 0;
+    min-height: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.coolant-interface-notification {
+    background-color: rgba(85, 255, 170, 0.1);
+    border-left: 3px solid var(--terminal-highlight);
+    padding: 10px 15px;
+    color: var(--terminal-highlight);
+    transition: opacity 0.5s ease;
+    position: relative;
+    animation: notification-slide-in 0.3s ease-out forwards;
+}
+
+.coolant-interface-notification.notification-warning {
+    background-color: rgba(255, 204, 0, 0.1);
+    border-left: 3px solid var(--terminal-warning);
+    color: var(--terminal-warning);
+}
+
+@keyframes notification-slide-in {
+    0% { opacity: 0; transform: translateY(-10px); }
+    100% { opacity: 1; transform: translateY(0); }
+}

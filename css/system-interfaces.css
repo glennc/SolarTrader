@@ -1,0 +1,261 @@
+/* System Interface Styles */
+.system-interface {
+  padding: 10px;
+  font-family: 'Courier New', monospace;
+  color: #1adc2b;
+  background-color: #001a00;
+  border: 2px solid #1adc2b;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.interface-header {
+  text-align: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #1adc2b;
+  padding-bottom: 10px;
+}
+
+.interface-header h1 {
+  font-size: 24px;
+  margin: 0 0 10px 0;
+  font-weight: normal;
+}
+
+.system-status {
+  font-size: 18px;
+  padding: 5px;
+  text-align: center;
+}
+
+.status-optimal {
+  color: #1adc2b;
+}
+
+.status-warning {
+  color: #dcb01a;
+}
+
+.status-alert {
+  color: #dc1a1a;
+  animation: blink 1s infinite;
+}
+
+.interface-main-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.gauge-container {
+  flex: 1;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.gauge {
+  background-color: #002200;
+  padding: 10px;
+  border: 1px solid #1adc2b;
+}
+
+.gauge-label {
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+.gauge-value {
+  font-size: 22px;
+  text-align: right;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.gauge-value.warning {
+  color: #dcb01a;
+}
+
+.gauge-bar {
+  height: 15px;
+  background-color: #003300;
+  position: relative;
+  margin-bottom: 5px;
+}
+
+.gauge-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background-color: #1adc2b;
+}
+
+.gauge-range {
+  font-size: 12px;
+  color: #888;
+}
+
+.diagnostic-info {
+  flex: 1;
+  min-width: 300px;
+  border: 1px solid #1adc2b;
+  padding: 10px;
+  background-color: #002200;
+}
+
+.diagnostic-header {
+  font-size: 16px;
+  text-align: center;
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #1adc2b;
+}
+
+.diagnostic-item {
+  padding: 8px;
+  margin-bottom: 5px;
+}
+
+.diagnostic-item.issue {
+  background-color: rgba(220, 26, 26, 0.2);
+  color: #dcb01a;
+}
+
+.diagnostic-item.normal {
+  background-color: rgba(26, 220, 43, 0.1);
+}
+
+.interface-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.control-button {
+  background-color: #003300;
+  color: #1adc2b;
+  border: 1px solid #1adc2b;
+  font-family: 'Courier New', monospace;
+  padding: 10px 15px;
+  font-size: 16px;
+  min-width: 180px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.control-button:hover {
+  background-color: #004400;
+}
+
+.control-button.completed {
+  background-color: rgba(26, 220, 43, 0.3);
+}
+
+.control-button.exit-button {
+  margin-top: 20px;
+  background-color: #330000;
+  color: #dc1a1a;
+  border-color: #dc1a1a;
+  width: 100%;
+}
+
+.control-button.exit-button:hover {
+  background-color: #440000;
+}
+
+/* Animation for system interfaces */
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* System mode container styling */
+.terminal-container.system-mode {
+  max-width: 1200px;
+  max-height: 90vh;
+  width: 95%;
+  height: 90vh;
+}
+
+/* Make gauges and diagnostics more readable in expanded mode */
+.terminal-container.system-mode .system-interface {
+  max-width: 100%;
+  padding: 20px;
+}
+
+.terminal-container.system-mode .interface-main-display {
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.terminal-container.system-mode .gauge-container {
+  min-width: 400px;
+}
+
+.terminal-container.system-mode .diagnostic-info {
+  min-width: 400px;
+}
+
+.terminal-container.system-mode .gauge-label {
+  font-size: 18px;
+}
+
+.terminal-container.system-mode .gauge-value {
+  font-size: 26px;
+}
+
+.terminal-container.system-mode .diagnostic-header {
+  font-size: 18px;
+}
+
+.terminal-container.system-mode .diagnostic-item {
+  font-size: 16px;
+  padding: 10px;
+}
+
+/* Status indicators for system interfaces */
+.status-indicators {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.indicator {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.indicator-icon {
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  border-radius: 50%;
+}
+
+.indicator-normal {
+  background-color: var(--terminal-highlight);
+  box-shadow: 0 0 5px var(--terminal-highlight);
+}
+
+.indicator-warning {
+  background-color: var(--terminal-warning);
+  box-shadow: 0 0 5px var(--terminal-warning);
+}
+
+.indicator-danger {
+  background-color: var(--terminal-danger);
+  box-shadow: 0 0 5px var(--terminal-danger);
+  animation: pulse 2s infinite;
+}
+
+/* Status container layout */
+.status-container {
+  display: flex;
+  align-items: center;
+}

@@ -31,6 +31,9 @@ export class CoolantSystemInterface extends BaseSystemInterface {
      * Renders the coolant system interface
      */
     renderInterface(renderer: DOMRenderer): () => void {
+        // Load the coolant system CSS
+        this.loadInterfaceCSS('/css/coolant-system.css', 'coolant-system');
+        
         renderer.clearOutput();
         
         // Set the terminal container to system mode for expanded view
@@ -49,6 +52,9 @@ export class CoolantSystemInterface extends BaseSystemInterface {
             if (terminalContainer) {
                 terminalContainer.classList.remove('system-mode');
             }
+            
+            // Unload the CSS when exiting
+            this.unloadInterfaceCSS();
         };
     }
     
