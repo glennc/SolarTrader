@@ -21,7 +21,7 @@ export class HistoricalView {
                     <span>ALL RECORDS</span>
                 </div>
                 <div class="logs-container">
-                    ${this.renderSystemLogs(true)}
+                    ${this.renderSystemLogs()}
                 </div>
             </div>
             
@@ -84,7 +84,7 @@ export class HistoricalView {
     /**
      * Renders system logs as HTML
      */
-    private renderSystemLogs(fullHistory: boolean = true): string {
+    private renderSystemLogs(): string {
         if (this.state.systemLogs.length === 0) {
             return '<div class="log-entry"><span class="log-message">No logs to display</span></div>';
         }

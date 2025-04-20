@@ -116,7 +116,7 @@ export class DiagnosticScanner {
         
         // Notify scan completed (cancelled)
         if (callbacks.onScanCompleted) {
-            setTimeout(() => callbacks.onScanCompleted(false), 1500);
+            setTimeout(() => callbacks.onScanCompleted?.(false), 1500);
         }
     }
     
@@ -143,7 +143,7 @@ export class DiagnosticScanner {
         
         // Notify scan completed successfully
         if (callbacks.onScanCompleted) {
-            setTimeout(() => callbacks.onScanCompleted(true), 2000);
+            setTimeout(() => callbacks.onScanCompleted?.(true), 2000);
         }
     }
     

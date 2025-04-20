@@ -4,16 +4,17 @@ import { DiagnosticsState } from '../models/diagnostics-state';
  * Renders the detailed view of the diagnostics interface
  */
 export class DetailedView {
-    private state: DiagnosticsState;
-    
-    constructor(state: DiagnosticsState) {
-        this.state = state;
+    constructor(private readonly state: DiagnosticsState) {
+        // Constructor receives state for future implementation
     }
     
     /**
      * Renders the detailed view content
      */
     render(): string {
+        // Currently using mock data, will use this.state in future updates
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        void this.state; // Reference state to avoid unused parameter warning
         return `
             <div class="diagnostic-section">
                 <div class="diagnostic-header">ENGINE SUBSYSTEM DIAGNOSTICS</div>
@@ -67,7 +68,7 @@ export class DetailedView {
                     
                     <div class="diagnostic-item">
                         <div class="diagnostic-title">POWER EFFICIENCY</div>
-                        <div class="diagnostic-value good">94.3%</</div>
+                        <div class="diagnostic-value good">94.3%</</</div>
                         <div class="diagnostic-details">+2.1% ABOVE BASELINE</div>
                     </div>
                 </div>

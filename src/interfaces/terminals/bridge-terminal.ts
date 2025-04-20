@@ -549,10 +549,7 @@ export class BridgeTerminalInterface extends BaseTerminalInterface {
             
             // Make system items clickable
             document.querySelectorAll('.system-action').forEach(actionButton => {
-                actionButton.addEventListener('click', (e) => {
-                    const systemItem = (e.target as HTMLElement).closest('.system-item');
-                    const systemName = systemItem?.querySelector('.system-name')?.textContent || 'Unknown System';
-                    
+                actionButton.addEventListener('click', () => {
                     // For demonstration purposes, just open the full diagnostics panel
                     this.openFullDiagnosticsPanel();
                 });

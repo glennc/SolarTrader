@@ -1,4 +1,4 @@
-import { DiagnosticsState, MaintenanceItem, SystemLog } from '../models/diagnostics-state';
+import { DiagnosticsState } from '../models/diagnostics-state';
 
 /**
  * Renders the overview view of the diagnostics interface
@@ -199,7 +199,7 @@ export class OverviewView {
     /**
      * Renders system logs as HTML
      */
-    private renderSystemLogs(fullHistory: boolean = false): string {
+    public renderSystemLogs(fullHistory: boolean = false): string {
         if (this.state.systemLogs.length === 0) {
             return '<div class="log-entry"><span class="log-message">No logs to display</span></div>';
         }

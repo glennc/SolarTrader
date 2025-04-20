@@ -18,7 +18,6 @@ import {
  * This class coordinates between different views and handles high-level UI interactions
  */
 export class SystemDiagnosticsInterface extends BaseSystemInterface {
-    private ship: Ship | null = null;
     private state: DiagnosticsState;
     private scanner: DiagnosticScanner;
     
@@ -40,8 +39,9 @@ export class SystemDiagnosticsInterface extends BaseSystemInterface {
     /**
      * Sets the ship reference to access ship systems data
      */
-    setShip(ship: Ship): void {
-        this.ship = ship;
+    setShip(_ship: Ship): void {
+        // Currently not using the ship reference, but keeping the method
+        // for future implementations that may need ship data
     }
     
     /**
