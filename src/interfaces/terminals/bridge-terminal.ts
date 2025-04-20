@@ -1,5 +1,7 @@
 import { BaseTerminalInterface } from './base-terminal';
 import { IShipSystem } from '../../systems/base-system';
+import { SystemDiagnosticsInterface } from '../systems/system-diagnostics-interface';
+import { InterfaceManager } from '../../managers/interface-manager';
 
 /**
  * Bridge Terminal Interface
@@ -8,6 +10,8 @@ import { IShipSystem } from '../../systems/base-system';
 export class BridgeTerminalInterface extends BaseTerminalInterface {
     private currentView: 'main' | 'status' | 'navigation' | 'communications' | 'diagnostics' = 'main';
     private shipSystems: Map<string, IShipSystem> = new Map();
+    private systemDiagnosticsInterface: SystemDiagnosticsInterface | null = null;
+    private interfaceManager: InterfaceManager | null = null;
     
     constructor() {
         super('bridge-terminal', 'Bridge Terminal');
@@ -18,6 +22,20 @@ export class BridgeTerminalInterface extends BaseTerminalInterface {
      */
     setShipSystems(systems: Map<string, IShipSystem>): void {
         this.shipSystems = systems;
+    }
+    
+    /**
+     * Set the system diagnostics interface reference
+     */
+    setSystemDiagnosticsInterface(diagnosticsInterface: SystemDiagnosticsInterface): void {
+        this.systemDiagnosticsInterface = diagnosticsInterface;
+    }
+    
+    /**
+     * Set the interface manager reference
+     */
+    setInterfaceManager(manager: InterfaceManager): void {
+        this.interfaceManager = manager;
     }
     
     /**
@@ -498,13 +516,21 @@ export class BridgeTerminalInterface extends BaseTerminalInterface {
                 </div>
             </div>
             
-            <div class="terminal-option back-option" id="back-to-main">Return to main menu</div>
+            <div class="terminal-options">
+                <div class="terminal-option full-diagnostics-option" id="open-full-diagnostics">
+                    OPEN FULL DIAGNOSTICS PANEL
+                </div>
+                <div class="terminal-option back-option" id="back-to-main">
+                    RETURN TO MAIN MENU
+                </div>
+            </div>
         `;
         
         this.renderer.updateOutput(diagnosticsContent.outerHTML);
         
-        // Add event listener for back button
+        // Add event listeners after DOM update
         setTimeout(() => {
+            // Back button event listener
             const backButton = document.getElementById('back-to-main');
             if (backButton) {
                 backButton.addEventListener('click', () => {
@@ -512,6 +538,40 @@ export class BridgeTerminalInterface extends BaseTerminalInterface {
                     this.renderTerminal();
                 });
             }
+            
+            // Full diagnostics panel button
+            const fullDiagnosticsButton = document.getElementById('open-full-diagnostics');
+            if (fullDiagnosticsButton) {
+                fullDiagnosticsButton.addEventListener('click', () => {
+                    this.openFullDiagnosticsPanel();
+                });
+            }
+            
+            // Make system items clickable
+            document.querySelectorAll('.system-action').forEach(actionButton => {
+                actionButton.addEventListener('click', (e) => {
+                    const systemItem = (e.target as HTMLElement).closest('.system-item');
+                    const systemName = systemItem?.querySelector('.system-name')?.textContent || 'Unknown System';
+                    
+                    // For demonstration purposes, just open the full diagnostics panel
+                    this.openFullDiagnosticsPanel();
+                });
+            });
         }, 100);
+    }
+    
+    /**
+     * Opens the full system diagnostics panel interface
+     */
+    private openFullDiagnosticsPanel(): void {
+        // Exit the terminal interface first
+        this.exitTerminal();
+        
+        // Launch the system diagnostics interface if available
+        if (this.systemDiagnosticsInterface && this.interfaceManager) {
+            this.interfaceManager.showSystemInterface(this.systemDiagnosticsInterface);
+        } else {
+            console.error('System diagnostics interface or interface manager not set up correctly');
+        }
     }
 }

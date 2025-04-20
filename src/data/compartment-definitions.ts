@@ -1,5 +1,6 @@
 import { BaseInteractableObject } from '../core/interactable-object';
-import { CoolantSystemInterface } from '../interfaces/system-interfaces';
+import { CoolantSystemInterface } from '../interfaces/systems/coolant-system-interface';
+import { SystemDiagnosticsInterface } from '../interfaces/systems/system-diagnostics-interface';
 
 /**
  * Placeholder for defining individual compartments.
@@ -74,14 +75,8 @@ export const bridgeObjects = [
         ['examine', 'look at', 'sit', 'use']
     ),
     
-    new BaseInteractableObject(
-        'System Diagnostics Panel',
-        'Displays ship-wide system status.',
-        'A dedicated panel showing detailed diagnostic information for all ship systems. Power levels, environmental controls, engine performance metrics, and hull integrity are all displayed in real-time. All indicators currently show normal operation, with the coolant system in Engine Room flagged for scheduled maintenance.',
-        false,
-        ['diagnostics panel', 'diagnostics', 'system panel', 'status panel'],
-        ['examine', 'look at', 'check', 'use', 'access']
-    )
+    // Replace the basic diagnostics panel with our interactive system diagnostics interface
+    new SystemDiagnosticsInterface()
 ];
 
 // Engine Room objects
