@@ -1,4 +1,4 @@
-import { BaseShipSystem, AlertLevel, SystemAlert } from './base-system';
+import { BaseShipSystem, AlertLevel } from './base-system';
 
 /**
  * Power system for the ship

@@ -3,16 +3,14 @@
  */
 export class DOMRenderer {
     private container: HTMLElement;
-    private outputElement: HTMLElement;
-    private timeElement: HTMLElement;
-    private alertLight: HTMLElement;
-    private locationElement: HTMLElement;
-    private inputElement: HTMLInputElement;
-    private terminalContainer: HTMLElement;
+    private outputElement!: HTMLElement;
+    private timeElement!: HTMLElement;
+    private alertLight!: HTMLElement;
+    private inputElement!: HTMLInputElement;
+    private terminalContainer!: HTMLElement;
     private commandHandler: ((input: string) => void) | null = null;
     private cycleNumber: number = 1;
     private shiftNumber: number = 1;
-    private isAlertActive: boolean = false;
 
     constructor(container: HTMLElement) {
         this.container = container;
@@ -147,8 +145,6 @@ export class DOMRenderer {
      * @param level Alert level ("warning" or "danger")
      */
     setAlertStatus(isActive: boolean, level: 'normal' | 'warning' | 'danger' = 'normal'): void {
-        this.isAlertActive = isActive;
-        
         const alertIcon = this.alertLight.querySelector('.alert-light-icon') as HTMLElement;
         const alertText = this.alertLight.querySelector('span') as HTMLElement;
         

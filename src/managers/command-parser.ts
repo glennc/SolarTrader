@@ -179,7 +179,7 @@ export class CommandParser {
             // Set the interface manager on the system interface if needed
             const sysInterface = interactableObject as unknown as SystemInterface;
             if ('setInterfaceManager' in sysInterface) {
-                sysInterface.setInterfaceManager(this.interfaceManager);
+                (sysInterface as any).setInterfaceManager(this.interfaceManager);
             }
             
             // Let the interact method handle the transition to system interface

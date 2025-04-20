@@ -1,4 +1,4 @@
-import { BaseInteractableObject, InteractableObject } from '../interactable-object';
+import { BaseInteractableObject } from '../interactable-object';
 import { InterfaceManager } from '../../managers/interface-manager';
 
 /**

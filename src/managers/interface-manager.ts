@@ -91,7 +91,7 @@ export class InterfaceManager {
         const cleanup = system.renderInterface(this.renderer);
         this.cleanupFunction = cleanup;
         
-        console.log(`InterfaceManager: Showing system interface for ${system.name}.`);
+        console.log(`InterfaceManager: Showing system interface.`);
     }
     
     /**

@@ -12,7 +12,7 @@ export class LifeSupportSystem extends BaseShipSystem {
     
     // Resource consumption rates (units per time unit)
     private _oxygenConsumptionRate: number = 0.05;  
-    private _waterConsumptionRate: number = 0.02;
+    // Water consumption rate is tracked but currently unused in the simulation
     
     constructor() {
         super('life-support', 'Life Support');
