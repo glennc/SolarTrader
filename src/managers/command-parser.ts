@@ -1,5 +1,6 @@
 import { WorldManager } from './world-manager';
 import { InterfaceManager } from './interface-manager';
+import { SystemInterface } from '../interfaces/system-interfaces';
 
 /**
  * Parses user input strings into game commands and executes them.
@@ -37,6 +38,12 @@ export class CommandParser {
         }
 
         console.log(`CommandParser: Parsing input "${input}"`);
+        
+        // Check if we're in a system interface mode
+        if (this.interfaceManager['activeSystemInterface']) {
+            this.handleSystemInterfaceCommand(input);
+            return;
+        }
 
         // Split input into words
         const parts = input.split(/\s+/); // Split by whitespace
@@ -71,6 +78,26 @@ export class CommandParser {
         // If we get here, the command wasn't recognized
         console.log(`CommandParser: Unknown command "${input}".`);
         this.outputMessage(`Unknown command: "${input}". Type "help" for a list of commands.`);
+    }
+    
+    /**
+     * Handle system interface commands
+     */
+    private handleSystemInterfaceCommand(input: string): void {
+        // Check for exit commands first
+        if (input.toLowerCase() === 'exit' || 
+            input.toLowerCase() === 'back' || 
+            input.toLowerCase() === 'quit' || 
+            input.toLowerCase() === 'return') {
+            
+            console.log("CommandParser: Executing EXIT command from system interface.");
+            this.interfaceManager.returnToFirstPerson();
+            return;
+        }
+        
+        // Handle other system interface commands
+        // For now, we just pass these through to the interface manager
+        this.interfaceManager.handleInput(input);
     }
     
     /**
@@ -145,11 +172,34 @@ export class CommandParser {
             return true; // It was an interaction attempt, even though it failed
         }
         
-        // Attempt the interaction
+        // Check if this is a system interface object
+        if (this.isSystemInterface(interactableObject) && 
+            ['use', 'access', 'interact', 'operate', 'repair', 'check'].includes(verb)) {
+            
+            // Set the interface manager on the system interface if needed
+            const sysInterface = interactableObject as unknown as SystemInterface;
+            if ('setInterfaceManager' in sysInterface) {
+                sysInterface.setInterfaceManager(this.interfaceManager);
+            }
+            
+            // Let the interact method handle the transition to system interface
+            const result = interactableObject.interact(verb);
+            this.outputMessage(result);
+            return true;
+        }
+        
+        // Standard interaction
         const result = interactableObject.interact(verb);
         this.outputMessage(result);
         
         return true;
+    }
+    
+    /**
+     * Check if an object implements the SystemInterface
+     */
+    private isSystemInterface(obj: any): boolean {
+        return obj && 'renderInterface' in obj;
     }
     
     /**
@@ -202,8 +252,13 @@ Looking:
 
 Interactions:
   use [object]     - Use or operate an object
+  access [object]  - Access a system interface
+  repair [object]  - Attempt to repair an object
   take [object]    - Try to pick up an object
   open [object]    - Try to open an object
+  
+System Interfaces:
+  exit, back       - Return to first-person view from a system interface
   
 Other:
   help             - Show this help text

@@ -1,4 +1,5 @@
 import { BaseInteractableObject } from '../core/interactable-object';
+import { CoolantSystemInterface } from '../interfaces/system-interfaces';
 
 /**
  * Placeholder for defining individual compartments.
@@ -112,14 +113,8 @@ export const engineRoomObjects = [
         ['examine', 'look at', 'open', 'close', 'access']
     ),
     
-    new BaseInteractableObject(
-        'Coolant Valves',
-        'Controls coolant flow to the main reactor.',
-        'A series of color-coded valves and pipes that regulate the flow of coolant through the reactor system. A small pressure gauge nearby reads 76%, and a maintenance reminder is blinking on the adjacent display. The system appears functional but due for servicing.',
-        false,
-        ['valves', 'coolant system', 'coolant', 'pipes'],
-        ['examine', 'look at', 'adjust', 'check', 'repair']
-    )
+    // Replace the basic coolant valves with our new interactive coolant system
+    new CoolantSystemInterface()
 ];
 
 // Cargo Hold objects

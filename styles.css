@@ -12,81 +12,253 @@
     --terminal-glow: rgba(51, 204, 255, 0.4);
 }
 
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 body {
     background-color: #111;
     font-family: 'Share Tech Mono', monospace;
     color: var(--terminal-text);
     margin: 0;
     padding: 0;
-}
-
-#app {
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
+    overflow: hidden;
+}
+
+#app {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100vh;
     padding: 20px;
 }
 
 .terminal-container {
-    width: 100%;
+    width: 90%;
     max-width: 800px;
-    height: 600px;
+    height: 80vh;
+    max-height: 600px;
     background-color: var(--terminal-bg);
     border: 2px solid var(--terminal-border);
     border-radius: 8px;
-    box-shadow: 0 0 20px var(--terminal-glow);
+    box-shadow: 0 0 20px var(--terminal-glow), inset 0 0 10px rgba(0, 0, 0, 0.8);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    padding: 20px;
+    position: relative;
+    padding: 2px;
+}
+
+/* System interface expanded mode */
+.terminal-container.system-mode {
+  max-width: 1200px;
+  max-height: 90vh;
+  width: 95%;
+  height: 90vh;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Make gauges and diagnostics more readable in expanded mode */
+.terminal-container.system-mode .system-interface {
+  max-width: 100%;
+  padding: 20px;
+}
+
+.terminal-container.system-mode .interface-main-display {
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.terminal-container.system-mode .gauge-container {
+  min-width: 400px;
+}
+
+.terminal-container.system-mode .diagnostic-info {
+  min-width: 400px;
+}
+
+.terminal-container.system-mode .gauge-label {
+  font-size: 18px;
+}
+
+.terminal-container.system-mode .gauge-value {
+  font-size: 26px;
+}
+
+.terminal-container.system-mode .diagnostic-header {
+  font-size: 18px;
+}
+
+.terminal-container.system-mode .diagnostic-item {
+  font-size: 16px;
+  padding: 10px;
+}
+
+/* CRT scan lines effect */
+.terminal-container::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        rgba(51, 204, 255, 0.03) 50%, 
+        rgba(0, 0, 0, 0) 51%
+    );
+    background-size: 100% 4px;
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0.2;
+    animation: scanlines 8s linear infinite;
+}
+
+/* Subtle flicker effect */
+.terminal-container::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(51, 204, 255, 0.02);
+    opacity: 0;
+    z-index: 9;
+    pointer-events: none;
+    animation: flicker 6s infinite;
+}
+
+@keyframes scanlines {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 100%; }
+}
+
+@keyframes flicker {
+    0% { opacity: 0; }
+    5% { opacity: 0.1; }
+    10% { opacity: 0; }
+    15% { opacity: 0; }
+    20% { opacity: 0.1; }
+    25% { opacity: 0; }
+    30% { opacity: 0; }
+    35% { opacity: 0.05; }
+    40% { opacity: 0; }
+    45% { opacity: 0; }
+    50% { opacity: 0.1; }
+    55% { opacity: 0; }
+    60% { opacity: 0; }
+    65% { opacity: 0; }
+    70% { opacity: 0.1; }
+    75% { opacity: 0; }
+    80% { opacity: 0; }
+    85% { opacity: 0.05; }
+    90% { opacity: 0; }
+    95% { opacity: 0; }
+    100% { opacity: 0; }
+}
+
+/* Interior container with border */
+.terminal-inner {
+    border: 1px solid var(--terminal-border);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 1;
+}
+
+/* Status bar / header */
+.terminal-header {
+    background-color: var(--terminal-header);
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--terminal-border);
+    text-shadow: 0 0 5px var(--terminal-glow);
+}
+
+.terminal-header-text {
+    font-size: 16px;
+    letter-spacing: 1px;
+}
+
+.terminal-time {
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    color: var(--terminal-highlight);
+    letter-spacing: 1px;
+    animation: blink 2s infinite;
+}
+
+@keyframes blink {
+    0% { opacity: 1; }
+    49% { opacity: 1; }
+    50% { opacity: 0.7; }
+    51% { opacity: 1; }
+    100% { opacity: 1; }
 }
 
 .terminal-output {
     flex-grow: 1;
     overflow-y: auto;
-    padding: 10px;
+    padding: 15px;
     margin-bottom: 10px;
-    line-height: 1.4;
+    line-height: 1.5;
+    background-color: rgba(0, 10, 15, 0.7);
 }
 
+/* Custom scrollbar */
 .terminal-output::-webkit-scrollbar {
     width: 8px;
 }
 
 .terminal-output::-webkit-scrollbar-track {
-    background: var(--terminal-bg);
+    background: var(--terminal-header);
 }
 
 .terminal-output::-webkit-scrollbar-thumb {
-    background: var(--terminal-border);
+    background: var(--terminal-dim);
     border-radius: 4px;
+}
+
+.terminal-output::-webkit-scrollbar-thumb:hover {
+    background: var(--terminal-text);
 }
 
 .terminal-input-line {
     display: flex;
     align-items: center;
-    padding: 5px;
+    padding: 10px 15px;
     background-color: var(--terminal-header);
-    border-radius: 4px;
+    border-top: 1px solid var(--terminal-border);
 }
 
 .terminal-prompt {
     color: var(--terminal-highlight);
-    margin-right: 8px;
+    margin-right: 10px;
+    text-shadow: 0 0 5px rgba(85, 255, 170, 0.4);
 }
 
 .terminal-input {
     flex-grow: 1;
-    background: none;
+    background: transparent;
     border: none;
     color: var(--terminal-text);
     font-family: 'Share Tech Mono', monospace;
     font-size: 16px;
     outline: none;
+    caret-color: var(--terminal-highlight);
 }
 
-/* Room name styling */
+/* Room styling */
 .terminal-output div {
     margin-bottom: 8px;
     white-space: pre-wrap;
@@ -94,22 +266,95 @@ body {
 }
 
 .terminal-output .room-name {
+    margin-top: 5px;
+    font-size: 20px;
     color: var(--terminal-highlight);
     font-weight: bold;
+    margin-bottom: 10px;
+    text-shadow: 0 0 8px rgba(85, 255, 170, 0.4);
+    padding-bottom: 5px;
+    border-bottom: 1px dashed var(--terminal-dim);
+}
+
+.terminal-output .room-description {
+    opacity: 0;
+    animation: fade-in 0.5s forwards;
+}
+
+@keyframes fade-in {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
 }
 
 .terminal-output .direction {
     color: var(--terminal-warning);
+    display: inline-block;
+    background-color: rgba(51, 204, 255, 0.1);
+    border: 1px solid var(--terminal-dim);
+    padding: 3px 8px;
+    margin-right: 8px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.terminal-output .direction:hover {
+    background-color: rgba(51, 204, 255, 0.3);
+    color: var(--terminal-highlight);
+    box-shadow: 0 0 8px var(--terminal-glow);
+}
+
+.terminal-output .direction::before {
+    content: "»";
+    margin-right: 5px;
+    color: var(--terminal-highlight);
+}
+
+/* Interactive objects styling */
+.terminal-output .object {
+    display: inline-block;
+    background-color: rgba(17, 85, 102, 0.3);
+    border: 1px solid var(--terminal-dim);
+    color: var(--terminal-text);
+    padding: 3px 8px;
+    margin-right: 8px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.terminal-output .object:hover {
+    background-color: var(--terminal-dim);
+    color: var(--terminal-highlight);
+    box-shadow: 0 0 8px var(--terminal-glow);
+}
+
+/* Section headers */
+.terminal-output .section-header {
+    font-size: 16px;
+    color: var(--terminal-dim);
+    margin-top: 15px;
+    margin-bottom: 10px;
+    border-bottom: 1px dashed var(--terminal-dim);
+    padding-bottom: 5px;
 }
 
 /* Command styling */
 .terminal-output div:has(span.command) {
     color: var(--terminal-highlight);
+    margin-top: 10px;
+    margin-bottom: 5px;
 }
 
 /* Error message styling */
 .terminal-output div.error {
     color: var(--terminal-danger);
+    background-color: rgba(255, 51, 85, 0.1);
+    border-left: 3px solid var(--terminal-danger);
+    padding: 8px;
+    margin: 10px 0;
 }
 
 /* Loading indicator styles */
@@ -121,6 +366,7 @@ body {
     height: 100%;
     background-color: var(--terminal-bg);
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     z-index: 1000;
@@ -131,7 +377,33 @@ body {
 .loading-text {
     color: var(--terminal-text);
     font-size: 24px;
+    text-shadow: 0 0 10px var(--terminal-glow);
+    margin-bottom: 20px;
     animation: pulse 1.5s infinite;
+}
+
+.loading-progress {
+    width: 300px;
+    height: 20px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--terminal-dim);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.loading-bar {
+    height: 100%;
+    background: linear-gradient(to right, var(--terminal-text), var(--terminal-highlight));
+    box-shadow: 0 0 8px var(--terminal-glow);
+    animation: loading 3s ease-in-out;
+    width: 100%;
+}
+
+@keyframes loading {
+    0% { width: 0%; }
+    50% { width: 70%; }
+    100% { width: 100%; }
 }
 
 @keyframes pulse {
@@ -149,16 +421,24 @@ body {
 /* Warning message styling */
 .terminal-output div.warning {
     color: var(--terminal-warning);
+    background-color: rgba(255, 204, 0, 0.1);
+    border-left: 3px solid var(--terminal-warning);
+    padding: 8px;
+    margin: 10px 0;
 }
 
 /* Help text styling */
 .terminal-output div.help {
     color: var(--terminal-dim);
+    padding: 8px;
+    margin: 10px 0;
+    border: 1px dashed var(--terminal-dim);
+    background-color: rgba(17, 85, 102, 0.1);
 }
 
 /* Room exits styling */
-.terminal-output div:has(span.direction) {
-    color: var(--terminal-text);
+.terminal-output div.exits {
+    margin-top: 15px;
 }
 
 /* Command input history styling */
@@ -167,12 +447,135 @@ body {
     margin-top: 4px;
 }
 
-/* Clear some space after major sections */
-.terminal-output div:has(span.room-name) {
-    margin-top: 12px;
-    margin-bottom: 12px;
-    padding: 4px 0;
-    border-bottom: 1px solid var(--terminal-dim);
+/* Notification styling */
+.notification {
+    background-color: rgba(85, 255, 170, 0.1);
+    border-left: 3px solid var(--terminal-highlight);
+    padding: 10px;
+    margin: 15px 0;
+    animation: notify-fade 5s forwards;
+}
+
+.warning-notification {
+    background-color: rgba(255, 204, 0, 0.1);
+    border-left: 3px solid var(--terminal-warning);
+}
+
+@keyframes notify-fade {
+    0% { opacity: 0; transform: translateY(-10px); }
+    10% { opacity: 1; transform: translateY(0); }
+    90% { opacity: 1; }
+    100% { opacity: 0.8; }
+}
+
+/* Status indicators */
+.status-indicators {
+    display: flex;
+    gap: 15px;
+}
+
+.indicator {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+}
+
+.indicator-icon {
+    width: 12px;
+    height: 12px;
+    margin-right: 6px;
+    border-radius: 50%;
+}
+
+.indicator-normal {
+    background-color: var(--terminal-highlight);
+    box-shadow: 0 0 5px var(--terminal-highlight);
+}
+
+.indicator-warning {
+    background-color: var(--terminal-warning);
+    box-shadow: 0 0 5px var(--terminal-warning);
+}
+
+.indicator-danger {
+    background-color: var(--terminal-danger);
+    box-shadow: 0 0 5px var(--terminal-danger);
+    animation: pulse 2s infinite;
+}
+
+/* Typing effect for descriptions */
+.typing-effect {
+    overflow: hidden;
+    border-right: 2px solid var(--terminal-highlight);
+    white-space: nowrap;
+    margin: 0;
+    letter-spacing: 0.5px;
+    animation: 
+        typing 3.5s steps(40, end),
+        blink-caret 0.75s step-end infinite;
+}
+
+@keyframes typing {
+    from { width: 0 }
+    to { width: 100% }
+}
+
+@keyframes blink-caret {
+    from, to { border-color: transparent }
+    50% { border-color: var(--terminal-highlight) }
+}
+
+/* Terminal bars for resource displays */
+.terminal-bar-container {
+    position: relative;
+    width: 200px;
+    height: 12px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--terminal-dim);
+    margin-left: 10px;
+    overflow: hidden;
+    display: inline-block;
+}
+
+.terminal-bar {
+    height: 100%;
+    transition: width 0.5s ease;
+}
+
+.terminal-bar--normal {
+    background: linear-gradient(to right, #33ccff, #55ffaa);
+    box-shadow: 0 0 8px rgba(51, 204, 255, 0.6);
+}
+
+.terminal-bar--warning {
+    background: linear-gradient(to right, #ffcc00, #ffa500);
+    box-shadow: 0 0 8px rgba(255, 204, 0, 0.6);
+}
+
+.terminal-bar--danger {
+    background: linear-gradient(to right, #ff7700, #ff3355);
+    box-shadow: 0 0 8px rgba(255, 55, 0, 0.6);
+}
+
+.terminal-bar-value {
+    position: absolute;
+    right: 5px;
+    top: -1px;
+    font-size: 12px;
+    color: white;
+    text-shadow: 0 0 3px black;
+}
+
+/* Datapad element */
+.datapad {
+    display: inline-block;
+    color: var(--terminal-highlight);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.datapad:hover {
+    text-shadow: 0 0 5px var(--terminal-highlight);
 }
 
 /* Animation for text appearance */
@@ -182,5 +585,298 @@ body {
 }
 
 .terminal-output div {
-    animation: text-appear 0.2s ease-out;
+    animation: text-appear 0.3s ease-out;
+}
+
+/* Alert light and status indicators */
+.status-indicators {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.alert-light {
+    display: flex;
+    align-items: center;
+}
+
+.alert-indicator {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+}
+
+.alert-light-icon {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: var(--terminal-highlight);
+    margin-right: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    position: relative;
+    box-shadow: 0 0 5px var(--terminal-highlight);
+}
+
+/* Normal state (already styled by default) */
+
+/* Warning alert state */
+.alert-light.alert-active .alert-light-icon.alert-warning {
+    background-color: var(--terminal-warning);
+    box-shadow: 0 0 10px var(--terminal-warning);
+    animation: warning-blink 1s infinite;
+}
+
+/* Danger alert state */
+.alert-light.alert-active .alert-light-icon.alert-danger {
+    background-color: var(--terminal-danger);
+    box-shadow: 0 0 10px var(--terminal-danger);
+    animation: danger-blink 0.5s infinite;
+}
+
+@keyframes warning-blink {
+    0% { opacity: 0.7; }
+    50% { opacity: 1; }
+    100% { opacity: 0.7; }
+}
+
+@keyframes danger-blink {
+    0% { opacity: 0.7; }
+    50% { opacity: 1; }
+    100% { opacity: 0.7; }
+}
+
+/* Terminal header layout adjustments */
+.terminal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.status-container {
+    display: flex;
+    align-items: center;
+}
+
+/* Cycle timer styling */
+.terminal-time {
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    color: var(--terminal-highlight);
+    letter-spacing: 1px;
+}
+
+/* Clickable elements */
+.clickable {
+    cursor: pointer;
+    position: relative;
+}
+
+.clickable::after {
+    content: "";
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background-color: var(--terminal-highlight);
+    transition: width 0.3s ease;
+}
+
+.clickable:hover::after {
+    width: 100%;
+}
+
+.terminal-output .direction.clickable:hover {
+    transform: translateY(-2px);
+    color: var(--terminal-highlight);
+    border-color: var(--terminal-highlight);
+    text-shadow: 0 0 5px var(--terminal-glow);
+}
+
+/* Add system interface styling */
+.system-interface {
+  padding: 10px;
+  font-family: 'Courier New', monospace;
+  color: #1adc2b;
+  background-color: #001a00;
+  border: 2px solid #1adc2b;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.interface-header {
+  text-align: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #1adc2b;
+  padding-bottom: 10px;
+}
+
+.interface-header h1 {
+  font-size: 24px;
+  margin: 0 0 10px 0;
+  font-weight: normal;
+}
+
+.system-status {
+  font-size: 18px;
+  padding: 5px;
+  text-align: center;
+}
+
+.status-optimal {
+  color: #1adc2b;
+}
+
+.status-warning {
+  color: #dcb01a;
+}
+
+.status-alert {
+  color: #dc1a1a;
+  animation: blink 1s infinite;
+}
+
+.interface-main-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.gauge-container {
+  flex: 1;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.gauge {
+  background-color: #002200;
+  padding: 10px;
+  border: 1px solid #1adc2b;
+}
+
+.gauge-label {
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+.gauge-value {
+  font-size: 22px;
+  text-align: right;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.gauge-value.warning {
+  color: #dcb01a;
+}
+
+.gauge-bar {
+  height: 15px;
+  background-color: #003300;
+  position: relative;
+  margin-bottom: 5px;
+}
+
+.gauge-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background-color: #1adc2b;
+}
+
+.gauge-range {
+  font-size: 12px;
+  color: #888;
+}
+
+.diagnostic-info {
+  flex: 1;
+  min-width: 300px;
+  border: 1px solid #1adc2b;
+  padding: 10px;
+  background-color: #002200;
+}
+
+.diagnostic-header {
+  font-size: 16px;
+  text-align: center;
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #1adc2b;
+}
+
+.diagnostic-item {
+  padding: 8px;
+  margin-bottom: 5px;
+}
+
+.diagnostic-item.issue {
+  background-color: rgba(220, 26, 26, 0.2);
+  color: #dcb01a;
+}
+
+.diagnostic-item.normal {
+  background-color: rgba(26, 220, 43, 0.1);
+}
+
+.interface-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.control-button {
+  background-color: #003300;
+  color: #1adc2b;
+  border: 1px solid #1adc2b;
+  font-family: 'Courier New', monospace;
+  padding: 10px 15px;
+  font-size: 16px;
+  min-width: 180px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.control-button:hover {
+  background-color: #004400;
+}
+
+.control-button.completed {
+  background-color: rgba(26, 220, 43, 0.3);
+}
+
+.control-button.exit-button {
+  margin-top: 20px;
+  background-color: #330000;
+  color: #dc1a1a;
+  border-color: #dc1a1a;
+  width: 100%;
+}
+
+.control-button.exit-button:hover {
+  background-color: #440000;
+}
+
+/* Additional styles for clickable objects */
+.object.clickable, .direction.clickable {
+  cursor: pointer;
+  display: inline-block;
+  padding: 2px 5px;
+  margin: 2px;
+  transition: all 0.2s;
+}
+
+.object.clickable:hover, .direction.clickable:hover {
+  background-color: rgba(26, 220, 43, 0.2);
+}
+
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
 }

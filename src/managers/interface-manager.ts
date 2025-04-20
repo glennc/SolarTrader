@@ -1,5 +1,6 @@
 import { UserInterface } from '../interfaces/base-interface';
 import { DOMRenderer } from '../interfaces/dom-renderer';
+import { SystemInterface } from '../interfaces/system-interfaces';
 import { WorldManager } from './world-manager';
 
 /**
@@ -7,12 +8,15 @@ import { WorldManager } from './world-manager';
  */
 export class InterfaceManager {
     private activeInterface: UserInterface | null;
+    private activeSystemInterface: SystemInterface | null;
     private interfaces: Map<string, UserInterface>;
     public renderer: DOMRenderer;
     private worldManager: WorldManager | null; // To provide context to the interface
+    private cleanupFunction: (() => void) | null = null;
 
     constructor(renderer: DOMRenderer) {
         this.activeInterface = null;
+        this.activeSystemInterface = null;
         this.interfaces = new Map<string, UserInterface>();
         this.renderer = renderer;
         this.worldManager = null;
@@ -41,6 +45,11 @@ export class InterfaceManager {
      * @param name The name of the interface to activate
      */
     setActiveInterface(name: string): void {
+        // If we're exiting a system interface, clean up
+        if (this.activeSystemInterface) {
+            this.exitSystemInterface();
+        }
+        
         const ui = this.interfaces.get(name);
         if (!ui) {
             console.error(`InterfaceManager: No interface registered with name "${name}".`);
@@ -58,6 +67,67 @@ export class InterfaceManager {
         
         console.log(`InterfaceManager: Active interface set to "${name}".`);
         this.render(); // Initial render of the new interface
+    }
+
+    /**
+     * Displays a system interface, temporarily replacing the first person view
+     */
+    showSystemInterface(system: SystemInterface): void {
+        if (!this.activeInterface) {
+            console.error("InterfaceManager: Cannot show system interface, no active interface to return to.");
+            return;
+        }
+        
+        // Store the current system interface
+        this.activeSystemInterface = system;
+        
+        // Expand the terminal container for system interface mode
+        const terminalContainer = document.querySelector('.terminal-container');
+        if (terminalContainer) {
+            terminalContainer.classList.add('system-mode');
+        }
+        
+        // Render the system interface
+        const cleanup = system.renderInterface(this.renderer);
+        this.cleanupFunction = cleanup;
+        
+        console.log(`InterfaceManager: Showing system interface for ${system.name}.`);
+    }
+    
+    /**
+     * Returns to the first person view from a system interface
+     */
+    returnToFirstPerson(): void {
+        if (!this.activeSystemInterface) {
+            console.warn("InterfaceManager: No system interface active to return from.");
+            return;
+        }
+        
+        // Restore original terminal size
+        const terminalContainer = document.querySelector('.terminal-container');
+        if (terminalContainer) {
+            terminalContainer.classList.remove('system-mode');
+        }
+        
+        this.exitSystemInterface();
+        
+        // Re-render the first person view
+        this.render();
+        
+        console.log("InterfaceManager: Returned to first person view.");
+    }
+    
+    /**
+     * Exits the current system interface with cleanup
+     */
+    private exitSystemInterface(): void {
+        // Execute cleanup function if it exists
+        if (this.cleanupFunction) {
+            this.cleanupFunction();
+            this.cleanupFunction = null;
+        }
+        
+        this.activeSystemInterface = null;
     }
 
     /**
@@ -79,6 +149,12 @@ export class InterfaceManager {
      * @param input The user input string.
      */
     handleInput(input: string): void {
+        // If we're in a system interface, certain commands should exit it
+        if (this.activeSystemInterface && (input.toLowerCase() === 'exit' || input.toLowerCase() === 'back')) {
+            this.returnToFirstPerson();
+            return;
+        }
+        
         if (this.activeInterface) {
             this.activeInterface.handleInput(input);
         } else {

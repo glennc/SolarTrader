@@ -42,15 +42,27 @@ async function initializeGame(): Promise<void> {
         const renderer = new DOMRenderer(appContainer);
         const worldManager = new WorldManager();
         const interfaceManager = new InterfaceManager(renderer);
-        interfaceManager.setWorldManager(worldManager);
-        const commandParser = new CommandParser(worldManager, interfaceManager);
         
         // Set up the first-person view
         const firstPersonView = new FirstPersonView();
         
-        // Register the view with the interface manager
+        // Create and initialize the ship FIRST
+        console.log('Creating and initializing ship...');
+        const ship = createShip();
+        worldManager.loadShip(ship);
+        worldManager.setPlayerStartLocation('Bridge');
+        console.log('Ship initialized and player placed at Bridge');
+        
+        // THEN set up the world manager references
+        interfaceManager.setWorldManager(worldManager);
+        firstPersonView.setWorldManager(worldManager);
+        
+        // THEN register the view with the interface manager
         interfaceManager.registerInterface('first-person', firstPersonView);
         interfaceManager.setActiveInterface('first-person');
+        
+        // Set up the command parser AFTER everything else is initialized
+        const commandParser = new CommandParser(worldManager, interfaceManager);
         
         // Connect renderer to command parser
         renderer.setCommandHandler((input: string) => {
@@ -61,12 +73,6 @@ async function initializeGame(): Promise<void> {
         console.log('Loading game assets...');
         await new Promise(resolve => setTimeout(resolve, 1000));
         console.log('Assets loaded');
-        
-        // Create and initialize the ship
-        const ship = createShip();
-        worldManager.loadShip(ship);
-        worldManager.setPlayerStartLocation('Bridge');
-        console.log('Ship initialized and player placed');
 
         // Remove loading screen
         loadingScreen.classList.add('hidden');
@@ -77,11 +83,15 @@ async function initializeGame(): Promise<void> {
             }, { once: true });
         });
         
-        // Render the initial view
-        interfaceManager.render();
-        
         // Display welcome message
-        renderer.updateOutput('Welcome to Solar Clipper: First Light\nType "help" for available commands.\n');
+        renderer.updateOutput('<div>Welcome to Solar Clipper: First Light\nType "help" for available commands.</div>');
+        
+        // Allow a brief moment for the welcome message to be processed
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        // THEN auto-execute the look command
+        console.log('Auto-executing look command for initial location description');
+        commandParser.parse('look');
         
         // Focus input field
         renderer.focusInput();
@@ -100,8 +110,19 @@ function createLoadingScreen(): HTMLDivElement {
     
     const loadingText = document.createElement('div');
     loadingText.className = 'loading-text';
-    loadingText.textContent = 'Initializing Solar Clipper...';
+    loadingText.textContent = 'INITIALIZING SOLAR CLIPPER...';
+    
+    // Add a loading progress bar
+    const progressContainer = document.createElement('div');
+    progressContainer.className = 'loading-progress';
+    
+    const progressBar = document.createElement('div');
+    progressBar.className = 'loading-bar';
+    
+    progressContainer.appendChild(progressBar);
     
     loadingScreen.appendChild(loadingText);
+    loadingScreen.appendChild(progressContainer);
+    
     return loadingScreen;
 }
