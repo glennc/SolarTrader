@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Navigation System Interface</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap');
+    
+    :root {
+      --terminal-bg: #000507;
+      --terminal-text: #33ccff;
+      --terminal-highlight: #55ffaa;
+      --terminal-dim: #115566;
+      --terminal-warning: #ffcc00;
+      --terminal-danger: #ff3355;
+      --terminal-header: #002233;
+      --terminal-border: #114455;
+      --terminal-glow: rgba(51, 204, 255, 0.4);
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      background-color: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--terminal-text);
+      overflow: hidden;
+    }
+    
+    .terminal {
+      width: 90%;
+      max-width: 800px;
+      background-color: var(--terminal-bg);
+      border: 2px solid var(--terminal-border);
+      border-radius: 8px;
+      box-shadow: 0 0 20px var(--terminal-glow), inset 0 0 10px rgba(0, 0, 0, 0.8);
+      position: relative;
+      overflow: hidden;
+      padding: 2px;
+      height: 90vh;
+      max-height: 600px;
+    }
+    
+    /* CRT scan lines effect */
+    .terminal::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(
+        rgba(51, 204, 255, 0.03) 50%, 
+        rgba(0, 0, 0, 0) 51%
+      );
+      background-size: 100% 4px;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0.2;
+      animation: scanlines 8s linear infinite;
+    }
+    
+    /* Subtle flicker effect */
+    .terminal::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(51, 204, 255, 0.02);
+      opacity: 0;
+      z-index: 9;
+      pointer-events: none;
+      animation: flicker 6s infinite;
+    }
+    
+    @keyframes scanlines {
+      0% { background-position: 0 0; }
+      100% { background-position: 0 100%; }
+    }
+    
+    @keyframes flicker {
+      0% { opacity: 0; }
+      5% { opacity: 0.1; }
+      10% { opacity: 0; }
+      15% { opacity: 0; }
+      20% { opacity: 0.1; }
+      25% { opacity: 0; }
+      30% { opacity: 0; }
+      35% { opacity: 0.05; }
+      40% { opacity: 0; }
+      45% { opacity: 0; }
+      50% { opacity: 0.1; }
+      55% { opacity: 0; }
+      60% { opacity: 0; }
+      65% { opacity: 0; }
+      70% { opacity: 0.1; }
+      75% { opacity: 0; }
+      80% { opacity: 0; }
+      85% { opacity: 0.05; }
+      90% { opacity: 0; }
+      95% { opacity: 0; }
+      100% { opacity: 0; }
+    }
+    
+    .terminal-inner {
+      border: 1px solid var(--terminal-border);
+      height: 100%;
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .terminal-header {
+      background-color: var(--terminal-header);
+      padding: 10px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--terminal-border);
+      text-shadow: 0 0 5px var(--terminal-glow);
+    }
+    
+    .terminal-header-text {
+      font-size: 18px;
+      letter-spacing: 1px;
+    }
+    
+    .terminal-time {
+      font-family: 'VT323', monospace;
+      font-size: 18px;
+      color: var(--terminal-highlight);
+      animation: blink 2s infinite;
+    }
+    
+    @keyframes blink {
+      0% { opacity: 1; }
+      49% { opacity: 1; }
+      50% { opacity: 0.7; }
+      51% { opacity: 1; }
+      100% { opacity: 1; }
+    }
+    
+    .terminal-content {
+      flex: 1;
+      padding: 15px;
+      overflow: hidden;
+      background-color: rgba(0, 10, 15, 0.7);
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .navigation-display {
+      display: flex;
+      height: 100%;
+    }
+    
+    .nav-sidebar {
+      width: 200px;
+      padding-right: 15px;
+      border-right: 1px dashed var(--terminal-dim);
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .nav-map {
+      flex: 1;
+      padding-left: 15px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .nav-data-section {
+      margin-bottom: 20px;
+    }
+    
+    .nav-data-title {
+      color: var(--terminal-highlight);
+      font-size: 14px;
+      margin-bottom: 8px;
+      border-bottom: 1px dashed var(--terminal-dim);
+      padding-bottom: 4px;
+    }
+    
+    .nav-data-row {
+      margin: 5px 0;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .nav-data-label {
+      color: var(--terminal-dim);
+    }
+    
+    .nav-data-value {
+      color: var(--terminal-text);
+      font-weight: bold;
+    }
+    
+    .nav-data-highlight {
+      color: var(--terminal-highlight);
+    }
+    
+    .nav-data-warning {
+      color: var(--terminal-warning);
+    }
+    
+    .star-field {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 5, 7, 0.8);
+      overflow: hidden;
+    }
+    
+    .star {
+      position: absolute;
+      background-color: #fff;
+      border-radius: 50%;
+      width: 2px;
+      height: 2px;
+      opacity: 0.7;
+    }
+    
+    .bright-star {
+      width: 3px;
+      height: 3px;
+      box-shadow: 0 0 3px #fff;
+      opacity: 0.9;
+    }
+    
+    .route-path {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--terminal-highlight), transparent);
+      box-shadow: 0 0 5px var(--terminal-highlight);
+      transform: translateY(-50%);
+    }
+    
+    .route-marker {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background-color: var(--terminal-highlight);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--terminal-highlight);
+      transform: translate(-50%, -50%);
+    }
+    
+    .ship-marker {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: var(--terminal-text);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--terminal-text);
+      transform: translate(-50%, -50%);
+      z-index: 5;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { box-shadow: 0 0 5px var(--terminal-text); }
+      50% { box-shadow: 0 0 15px var(--terminal-text); }
+      100% { box-shadow: 0 0 5px var(--terminal-text); }
+    }
+    
+    .destination-marker {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border: 2px solid var(--terminal-highlight);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--terminal-highlight);
+      transform: translate(-50%, -50%);
+      z-index: 5;
+    }
+    
+    .origin-marker {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background-color: var(--terminal-dim);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 5;
+    }
+    
+    .celestial-body {
+      position: absolute;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 3;
+    }
+    
+    .planet {
+      background: radial-gradient(circle at 30% 30%, var(--planet-color, #336699), #000);
+      box-shadow: 0 0 10px rgba(51, 102, 153, 0.5);
+    }
+    
+    .star-body {
+      background: radial-gradient(circle at 30% 30%, #ffcc33, #ff6600);
+      box-shadow: 0 0 20px rgba(255, 102, 0, 0.8);
+    }
+    
+    .label {
+      position: absolute;
+      font-size: 12px;
+      color: var(--terminal-dim);
+      white-space: nowrap;
+      text-shadow: 0 0 5px #000;
+      pointer-events: none;
+    }
+    
+    .orbital-ring {
+      position: absolute;
+      border: 1px dashed rgba(51, 204, 255, 0.2);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+    
+    .jump-point {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background-color: var(--terminal-warning);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 5px var(--terminal-warning);
+    }
+    
+    .route-progress {
+      position: relative;
+      width: 100%;
+      height: 20px;
+      background-color: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--terminal-dim);
+      border-radius: 4px;
+      margin-top: 15px;
+      overflow: hidden;
+    }
+    
+    .route-progress-bar {
+      height: 100%;
+      width: 35%;
+      background: linear-gradient(to right, var(--terminal-text), var(--terminal-highlight));
+      box-shadow: 0 0 10px rgba(51, 204, 255, 0.5);
+    }
+    
+    .button-bar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .nav-button {
+      background-color: var(--terminal-header);
+      border: 1px solid var(--terminal-dim);
+      color: var(--terminal-text);
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+    }
+    
+    .nav-button:hover {
+      background-color: var(--terminal-dim);
+      box-shadow: 0 0 10px var(--terminal-glow);
+    }
+    
+    .primary-button {
+      border-color: var(--terminal-highlight);
+      color: var(--terminal-highlight);
+    }
+    
+    .nav-lock {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 5px 8px;
+      background-color: rgba(0, 34, 51, 0.7);
+      border: 1px solid var(--terminal-dim);
+      border-radius: 4px;
+      font-size: 12px;
+      color: var(--terminal-highlight);
+    }
+    
+    .nav-lock-icon {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background-color: var(--terminal-highlight);
+      border-radius: 50%;
+      margin-right: 5px;
+      animation: blink 2s infinite;
+    }
+    
+    .terminal-footer {
+      background-color: var(--terminal-header);
+      padding: 10px 15px;
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid var(--terminal-border);
+    }
+    
+    .footer-status {
+      font-size: 14px;
+      color: var(--terminal-dim);
+    }
+    
+    .footer-nav-mode {
+      font-size: 14px;
+      color: var(--terminal-highlight);
+    }
+    
+    /* Animations for the stars */
+    @keyframes twinkle {
+      0% { opacity: 0.3; }
+      50% { opacity: 1; }
+      100% { opacity: 0.3; }
+    }
+    
+    @keyframes meteor {
+      0% { 
+        transform: translate(0, 0); 
+        opacity: 0;
+      }
+      10% {
+        opacity: 1;
+      }
+      90% {
+        opacity: 1;
+      }
+      100% { 
+        transform: translate(-300px, 300px); 
+        opacity: 0;
+      }
+    }
+    
+    .meteor {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background-color: white;
+      box-shadow: 0 0 5px white, 0 0 10px white;
+      border-radius: 50%;
+      animation: meteor 3s linear infinite;
+      opacity: 0;
+    }
+    
+    .meteor::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 20px;
+      height: 1px;
+      background: linear-gradient(to left, white, transparent);
+      transform: translateX(-100%);
+    }
+  </style>
+</head>
+<body>
+  <div class="terminal">
+    <div class="terminal-inner">
+      <div class="terminal-header">
+        <div class="terminal-header-text">NAVIGATION CONTROL SYSTEM v3.26</div>
+        <div class="terminal-time">T+02:04:37:12</div>
+      </div>
+      
+      <div class="terminal-content">
+        <div class="navigation-display">
+          <div class="nav-sidebar">
+            <div class="nav-data-section">
+              <div class="nav-data-title">CURRENT POSITION</div>
+              <div class="nav-data-row">
+                <span class="nav-data-label">SECTOR:</span>
+                <span class="nav-data-value">SOL-4C</span>
+              </div>
+              <div class="nav-data-row">
+                <span class="nav-data-label">SYSTEM:</span>
+                <span class="nav-data-value">PROXIMA</span>
+              </div>
+              <div class="nav-data-row">
+                <span class="nav-data-label">COORDINATES:</span>
+                <span class="nav-data-value">38.721 / -4.893</span>
+              </div>
+            </div>
+            
+            <div class="nav-data-section">
+              <div class="nav-data-title">ROUTE INFORMATION</div>
+              <div class="nav-data-row">
+                <span class="nav-data-label">ORIGIN:</span>
+                <span class="nav-data-value">EARTH ORBITAL</span>
+              </div>
+              <div class="nav-data-row">
+                <span class="nav-data-label">DESTINATION:</span>
+                <span class="nav-data-value nav-data-highlight">ALPHA CENTAURI</span>
+              </div>
+              <div class="nav-data-row">
+                <span class="nav-data-label">DISTANCE:</span>
+                <span class="nav-data-value">4.37 LIGHT YEARS</span>
+              </div>
+              <div class="nav-data-row">
+                <span class="nav-data-label">TRAVELED:</span>
+                <span class="nav-data-value">1.53 LIGHT YEARS</span>
+              </div>
+              <div class="nav-data-row">
+                <span class="nav-data-label">REMAINING:</span>
+                <span class="nav-data-value">2.84 LIGHT YEARS</span>
+              </div>
+            </div>
+            
+            <div class="nav-data-section">
+              <div class="nav-data-title">FLIGHT DATA</div>
+              <div class="nav-data-row">
+                <span class="nav-data-label">VELOCITY:</span>
+                <span class="nav-data-value">0.35 C</span>
+              </div>
+              <div class="nav-data-row">
+                <span class="nav-data-label">FUEL USAGE:</span>
+                <span class="nav-data-value nav-data-warning">OPTIMAL+12%</span>
+              </div>
+              <div class="nav-data-row">
+                <span class="nav-data-label">ETA:</span>
+                <span class="nav-data-value nav-data-highlight">4D 07H 23M</span>
+              </div>
+              <div class="nav-data-row">
+                <span class="nav-data-label">STATUS:</span>
+                <span class="nav-data-value">ON COURSE</span>
+              </div>
+            </div>
+            
+            <div class="route-progress">
+              <div class="route-progress-bar"></div>
+            </div>
+            
+            <div class="button-bar">
+              <button class="nav-button">DETAILS</button>
+              <button class="nav-button">SCAN</button>
+              <button class="nav-button primary-button">ADJUST COURSE</button>
+            </div>
+          </div>
+          
+          <div class="nav-map">
+            <div class="nav-lock">
+              <span class="nav-lock-icon"></span> COURSE LOCKED
+            </div>
+            
+            <div class="star-field" id="starField">
+              <!-- Stars will be generated by script -->
+              
+              <!-- Route -->
+              <div class="route-path"></div>
+              
+              <!-- Origin -->
+              <div class="origin-marker" style="left: 15%; top: 50%;"></div>
+              <div class="label" style="left: 15%; top: calc(50% + 15px);">EARTH</div>
+              
+              <!-- Ship position -->
+              <div class="ship-marker" style="left: 35%; top: 50%;"></div>
+              <div class="label" style="left: 35%; top: calc(50% - 15px);">CURRENT POSITION</div>
+              
+              <!-- Destination -->
+              <div class="destination-marker" style="left: 85%; top: 50%;"></div>
+              <div class="label" style="left: 85%; top: calc(50% + 15px);">ALPHA CENTAURI</div>
+              
+              <!-- Route markers -->
+              <div class="route-marker" style="left: 25%; top: 50%;"></div>
+              <div class="route-marker" style="left: 45%; top: 50%;"></div>
+              <div class="route-marker" style="left: 65%; top: 50%;"></div>
+              
+              <!-- Celestial bodies -->
+              <div class="celestial-body planet" style="left: 15%; top: 50%; width: 12px; height: 12px; --planet-color: #3366aa;"></div>
+              <div class="orbital-ring" style="left: 15%; top: 50%; width: 30px; height: 30px;"></div>
+              
+              <div class="celestial-body star-body" style="left: 85%; top: 50%; width: 16px; height: 16px;"></div>
+              <div class="celestial-body planet" style="left: 83%; top: 45%; width: 8px; height: 8px; --planet-color: #66aa77;"></div>
+              <div class="celestial-body planet" style="left: 88%; top: 53%; width: 6px; height: 6px; --planet-color: #aa6655;"></div>
+              <div class="orbital-ring" style="left: 85%; top: 50%; width: 40px; height: 40px;"></div>
+              
+              <!-- Jump points -->
+              <div class="jump-point" style="left: 65%; top: 50%;"></div>
+              <div class="label" style="left: 65%; top: calc(50% - 15px);">JUMP POINT ALPHA</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="terminal-footer">
+        <div class="footer-status">NAVIGATION TELEMETRY: SIGNAL STRENGTH 97%</div>
+        <div class="footer-nav-mode">MODE: STANDARD FTL CRUISE</div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Generate stars for the star field
+    const starField = document.getElementById('starField');
+    
+    for (let i = 0; i < 100; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      
+      // Random position
+      const left = Math.random() * 100;
+      const top = Math.random() * 100;
+      star.style.left = `${left}%`;
+      star.style.top = `${top}%`;
+      
+      // Random twinkle animation
+      const duration = 2 + Math.random() * 3;
+      const delay = Math.random() * 5;
+      star.style.animation = `twinkle ${duration}s ease-in-out ${delay}s infinite`;
+      
+      // Some stars are brighter
+      if (Math.random() > 0.8) {
+        star.classList.add('bright-star');
+      }
+      
+      starField.appendChild(star);
+    }
+    
+    // Generate occasional meteors
+    setInterval(() => {
+      if (Math.random() > 0.7) {
+        const meteor = document.createElement('div');
+        meteor.className = 'meteor';
+        
+        // Random starting position in top right quadrant
+        const left = 50 + Math.random() * 50;
+        const top = Math.random() * 50;
+        meteor.style.left = `${left}%`;
+        meteor.style.top = `${top}%`;
+        
+        // Random duration
+        const duration = 1 + Math.random() * 2;
+        meteor.style.animationDuration = `${duration}s`;
+        
+        starField.appendChild(meteor);
+        
+        // Remove after animation completes
+        setTimeout(() => {
+          meteor.remove();
+        }, duration * 1000);
+      }
+    }, 1000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Communications Terminal Interface</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap');
+    
+    :root {
+      --terminal-bg: #000507;
+      --terminal-text: #33ccff;
+      --terminal-highlight: #55ffaa;
+      --terminal-dim: #115566;
+      --terminal-warning: #ffcc00;
+      --terminal-danger: #ff3355;
+      --terminal-header: #002233;
+      --terminal-border: #114455;
+      --terminal-glow: rgba(51, 204, 255, 0.4);
+      --terminal-received: #8855ff;
+      --terminal-sent: #33ccff;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      background-color: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--terminal-text);
+      overflow: hidden;
+    }
+    
+    .terminal {
+      width: 90%;
+      max-width: 800px;
+      background-color: var(--terminal-bg);
+      border: 2px solid var(--terminal-border);
+      border-radius: 8px;
+      box-shadow: 0 0 20px var(--terminal-glow), inset 0 0 10px rgba(0, 0, 0, 0.8);
+      position: relative;
+      overflow: hidden;
+      padding: 2px;
+      height: 90vh;
+      max-height: 600px;
+    }
+    
+    /* CRT scan lines effect */
+    .terminal::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(
+        rgba(51, 204, 255, 0.03) 50%, 
+        rgba(0, 0, 0, 0) 51%
+      );
+      background-size: 100% 4px;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0.2;
+      animation: scanlines 8s linear infinite;
+    }
+    
+    /* Subtle flicker effect */
+    .terminal::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(51, 204, 255, 0.02);
+      opacity: 0;
+      z-index: 9;
+      pointer-events: none;
+      animation: flicker 6s infinite;
+    }
+    
+    @keyframes scanlines {
+      0% { background-position: 0 0; }
+      100% { background-position: 0 100%; }
+    }
+    
+    @keyframes flicker {
+      0% { opacity: 0; }
+      5% { opacity: 0.1; }
+      10% { opacity: 0; }
+      15% { opacity: 0; }
+      20% { opacity: 0.1; }
+      25% { opacity: 0; }
+      30% { opacity: 0; }
+      35% { opacity: 0.05; }
+      40% { opacity: 0; }
+      45% { opacity: 0; }
+      50% { opacity: 0.1; }
+      55% { opacity: 0; }
+      60% { opacity: 0; }
+      65% { opacity: 0; }
+      70% { opacity: 0.1; }
+      75% { opacity: 0; }
+      80% { opacity: 0; }
+      85% { opacity: 0.05; }
+      90% { opacity: 0; }
+      95% { opacity: 0; }
+      100% { opacity: 0; }
+    }
+    
+    .terminal-inner {
+      border: 1px solid var(--terminal-border);
+      height: 100%;
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .terminal-header {
+      background-color: var(--terminal-header);
+      padding: 10px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--terminal-border);
+      text-shadow: 0 0 5px var(--terminal-glow);
+    }
+    
+    .terminal-header-text {
+      font-size: 18px;
+      letter-spacing: 1px;
+    }
+    
+    .terminal-time {
+      font-family: 'VT323', monospace;
+      font-size: 18px;
+      color: var(--terminal-highlight);
+      animation: blink 2s infinite;
+    }
+    
+    @keyframes blink {
+      0% { opacity: 1; }
+      49% { opacity: 1; }
+      50% { opacity: 0.7; }
+      51% { opacity: 1; }
+      100% { opacity: 1; }
+    }
+    
+    .terminal-content {
+      flex: 1;
+      overflow: hidden;
+      background-color: rgba(0, 10, 15, 0.7);
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .comms-interface {
+      display: flex;
+      height: 100%;
+    }
+    
+    .comms-sidebar {
+      width: 200px;
+      background-color: rgba(0, 20, 30, 0.7);
+      border-right: 1px solid var(--terminal-dim);
+      padding: 10px;
+      overflow-y: auto;
+    }
+    
+    .comms-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .contact-list-header {
+      color: var(--terminal-highlight);
+      font-size: 14px;
+      margin-bottom: 10px;
+      padding-bottom: 5px;
+      border-bottom: 1px dashed var(--terminal-dim);
+    }
+    
+    .contact-list {
+      list-style: none;
+    }
+    
+    .contact-item {
+      padding: 8px 10px;
+      margin-bottom: 5px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 13px;
+      position: relative;
+    }
+    
+    .contact-item:hover {
+      background-color: rgba(51, 204, 255, 0.1);
+    }
+    
+    .contact-item.active {
+      background-color: rgba(51, 204, 255, 0.2);
+      box-shadow: 0 0 5px var(--terminal-glow);
+      border-left: 2px solid var(--terminal-highlight);
+    }
+    
+    .contact-item.unread::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: 10px;
+      transform: translateY(-50%);
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--terminal-highlight);
+    }
+    
+    .contact-group-header {
+      color: var(--terminal-dim);
+      font-size: 12px;
+      margin: 15px 0 5px;
+      text-transform: uppercase;
+    }
+    
+    .signal-indicator {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+    
+    .signal-good {
+      background-color: var(--terminal-highlight);
+      box-shadow: 0 0 3px var(--terminal-highlight);
+    }
+    
+    .signal-medium {
+      background-color: var(--terminal-warning);
+      box-shadow: 0 0 3px var(--terminal-warning);
+    }
+    
+    .signal-poor {
+      background-color: var(--terminal-danger);
+      box-shadow: 0 0 3px var(--terminal-danger);
+    }
+    
+    .contact-status {
+      font-size: 10px;
+      color: var(--terminal-dim);
+      margin-left: 13px;
+      margin-top: 2px;
+    }
+    
+    .comms-header {
+      padding: 10px 15px;
+      background-color: rgba(0, 20, 30, 0.5);
+      border-bottom: 1px solid var(--terminal-dim);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .current-contact {
+      font-size: 16px;
+      color: var(--terminal-highlight);
+    }
+    
+    .comms-controls {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .comms-button {
+      background-color: rgba(0, 34, 51, 0.7);
+      border: 1px solid var(--terminal-dim);
+      color: var(--terminal-text);
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s ease;
+    }
+    
+    .comms-button:hover {
+      background-color: var(--terminal-dim);
+      box-shadow: 0 0 5px var(--terminal-glow);
+    }
+    
+    .comms-button.warning {
+      border-color: var(--terminal-warning);
+      color: var(--terminal-warning);
+    }
+    
+    .comms-messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .message {
+      max-width: 80%;
+      padding: 10px 12px;
+      border-radius: 4px;
+      position: relative;
+      animation: fadeIn 0.3s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .message-received {
+      background-color: rgba(136, 85, 255, 0.1);
+      border-left: 2px solid var(--terminal-received);
+      align-self: flex-start;
+    }
+    
+    .message-sent {
+      background-color: rgba(51, 204, 255, 0.1);
+      border-right: 2px solid var(--terminal-sent);
+      align-self: flex-end;
+    }
+    
+    .message-content {
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+    
+    .message-metadata {
+      font-size: 10px;
+      color: var(--terminal-dim);
+      text-align: right;
+    }
+    
+    .message-indicator {
+      position: absolute;
+      bottom: 5px;
+      font-size: 10px;
+    }
+    
+    .message-received .message-indicator {
+      left: 12px;
+      color: var(--terminal-received);
+    }
+    
+    .message-sent .message-indicator {
+      right: 12px;
+      color: var(--terminal-sent);
+    }
+    
+    .system-message {
+      width: 100%;
+      text-align: center;
+      padding: 8px;
+      font-size: 12px;
+      color: var(--terminal-dim);
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 4px;
+    }
+    
+    .typing-indicator {
+      display: flex;
+      padding: 10px;
+      align-self: flex-start;
+    }
+    
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--terminal-received);
+      margin: 0 2px;
+      opacity: 0.5;
+    }
+    
+    .typing-dot:nth-child(1) {
+      animation: typing 1s infinite 0s;
+    }
+    
+    .typing-dot:nth-child(2) {
+      animation: typing 1s infinite 0.2s;
+    }
+    
+    .typing-dot:nth-child(3) {
+      animation: typing 1s infinite 0.4s;
+    }
+    
+    @keyframes typing {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+      100% { transform: translateY(0); }
+    }
+    
+    .message-input-container {
+      padding: 10px 15px;
+      background-color: rgba(0, 20, 30, 0.5);
+      border-top: 1px solid var(--terminal-dim);
+      display: flex;
+      gap: 10px;
+    }
+    
+    .message-input {
+      flex: 1;
+      background-color: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--terminal-dim);
+      border-radius: 4px;
+      padding: 8px 12px;
+      color: var(--terminal-text);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 14px;
+      outline: none;
+    }
+    
+    .message-input:focus {
+      border-color: var(--terminal-highlight);
+      box-shadow: 0 0 5px var(--terminal-glow);
+    }
+    
+    .send-button {
+      background-color: rgba(0, 34, 51, 0.7);
+      border: 1px solid var(--terminal-highlight);
+      color: var(--terminal-highlight);
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+    
+    .send-button:hover {
+      background-color: rgba(51, 204, 255, 0.1);
+      box-shadow: 0 0 10px var(--terminal-glow);
+    }
+    
+    .connection-status {
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      margin-left: 10px;
+    }
+    
+    .status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 5px;
+      background-color: var(--terminal-highlight);
+      box-shadow: 0 0 5px var(--terminal-highlight);
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 0.5; }
+      50% { opacity: 1; }
+      100% { opacity: 0.5; }
+    }
+    
+    .terminal-footer {
+      background-color: var(--terminal-header);
+      padding: 10px 15px;
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid var(--terminal-border);
+    }
+    
+    .footer-status {
+      font-size: 14px;
+      color: var(--terminal-dim);
+    }
+    
+    .frequency-display {
+      font-size: 14px;
+      color: var(--terminal-text);
+    }
+    
+    .encryption-indicator {
+      font-size: 12px;
+      color: var(--terminal-highlight);
+      margin-left: 15px;
+    }
+    
+    .encryption-icon {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background-color: var(--terminal-highlight);
+      margin-right: 5px;
+      animation: blink 1s infinite;
+    }
+    
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 34, 51, 0.5);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--terminal-dim);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--terminal-text);
+    }
+  </style>
+</head>
+<body>
+  <div class="terminal">
+    <div class="terminal-inner">
+      <div class="terminal-header">
+        <div class="terminal-header-text">COMMUNICATIONS SYSTEM v1.84</div>
+        <div class="terminal-time">T+02:04:37:12</div>
+      </div>
+      
+      <div class="terminal-content">
+        <div class="comms-interface">
+          <div class="comms-sidebar">
+            <div class="contact-list-header">CONTACTS</div>
+            
+            <div class="contact-list">
+              <div class="contact-group-header">MISSION CONTACTS</div>
+              
+              <div class="contact-item active">
+                <div><span class="signal-indicator signal-good"></span> ALPHA CENTAURI STATION</div>
+                <div class="contact-status">Last msg: 2h ago</div>
+              </div>
+              
+              <div class="contact-item unread">
+                <div><span class="signal-indicator signal-medium"></span> STELLAR MEDICAL CORP</div>
+                <div class="contact-status">Last msg: 6h ago</div>
+              </div>
+              
+              <div class="contact-group-header">EMERGENCY CHANNELS</div>
+              
+              <div class="contact-item">
+                <div><span class="signal-indicator signal-good"></span> SPACE TRAFFIC CONTROL</div>
+                <div class="contact-status">Always available</div>
+              </div>
+              
+              <div class="contact-item">
+                <div><span class="signal-indicator signal-good"></span> EMERGENCY SERVICES</div>
+                <div class="contact-status">Always available</div>
+              </div>
+              
+              <div class="contact-group-header">PERSONAL CONTACTS</div>
+              
+              <div class="contact-item">
+                <div><span class="signal-indicator signal-poor"></span> EARTH ORBITAL HQ</div>
+                <div class="contact-status">Signal weak</div>
+              </div>
+              
+              <div class="contact-item unread">
+                <div><span class="signal-indicator signal-medium"></span> CAPTAIN ZHANG, ISV PHOENIX</div>
+                <div class="contact-status">Last msg: 1d ago</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="comms-main">
+            <div class="comms-header">
+              <div class="current-contact">ALPHA CENTAURI STATION</div>
+              <div class="comms-controls">
+                <button class="comms-button">AUDIO CALL</button>
+                <button class="comms-button">DATA TRANSFER</button>
+                <button class="comms-button warning">EMERGENCY</button>
+              </div>
+            </div>
+            
+            <div class="comms-messages">
+              <div class="system-message">
+                --- COMMUNICATIONS LOG START: 02:01:14:38 ---
+              </div>
+              
+              <div class="message message-received">
+                <div class="message-content">Greetings, Captain. This is Alpha Centauri Station Control. We've received your flight plan and projected arrival time. Please confirm cargo manifest details for docking preparations.</div>
+                <div class="message-metadata">02:01:14:38</div>
+                <div class="message-indicator">AC STATION</div>
+              </div>
+              
+              <div class="message message-sent">
+                <div class="message-content">Alpha Centauri Station, this is Captain aboard The Sparrow. Confirming cargo manifest: 12 crates of medical supplies, priority clearance from Stellar Medical Corp. ETA remains 4 days, 7 hours.</div>
+                <div class="message-metadata">02:01:14:52</div>
+                <div class="message-indicator">YOU</div>
+              </div>
+              
+              <div class="message message-received">
+                <div class="message-content">Confirmed, Sparrow. Medical supplies are flagged for priority processing. Docking bay 17 has been reserved for your arrival. Please be advised of increased traffic in sectors 3-A and 4-B due to ongoing construction. Recommend plotting course through sector 2-C.</div>
+                <div class="message-metadata">02:01:15:13</div>
+                <div class="message-indicator">AC STATION</div>
+              </div>
+              
+              <div class="message message-sent">
+                <div class="message-content">Understood. Will adjust course through sector 2-C. Any update on the solar flare activity reported yesterday?</div>
+                <div class="message-metadata">02:01:15:29</div>
+                <div class="message-indicator">YOU</div>
+              </div>
+              
+              <div class="message message-received">
+                <div class="message-content">Solar activity has decreased by 37% since yesterday's report. No significant hazard anticipated along your trajectory. We'll update you if conditions change. Standard telemetry updates will continue on channel 47.3.</div>
+                <div class="message-metadata">02:01:15:48</div>
+                <div class="message-indicator">AC STATION</div>
+              </div>
+              
+              <div class="message message-sent">
+                <div class="message-content">Copy that. The Sparrow will maintain standard communication protocols. Been experiencing some minor fluctuations in the coolant system that might need attention upon arrival.</div>
+                <div class="message-metadata">02:02:37:05</div>
+                <div class="message-indicator">YOU</div>
+              </div>
+              
+              <div class="message message-received">
+                <div class="message-content">Noted, Captain. I've flagged your maintenance request for the technical team. They'll have diagnostic equipment ready upon your arrival. Is the coolant issue affecting your engine performance?</div>
+                <div class="message-metadata">02:02:37:14</div>
+                <div class="message-indicator">AC STATION</div>
+              </div>
+              
+              <div class="typing-indicator">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+              </div>
+            </div>
+            
+            <div class="message-input-container">
+              <input type="text" class="message-input" placeholder="Type your message...">
+              <button class="send-button">SEND</button>
+              <div class="connection-status">
+                <div class="status-indicator"></div>
+                CONNECTED
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="terminal-footer">
+        <div class="footer-status">SIGNAL STRENGTH: 93%</div>
+        <div class="frequency-display">
+          CHANNEL: 47.3 / FREQ: 12.845 GHz
+          <span class="encryption-indicator">
+            <span class="encryption-icon"></span>
+            ENCRYPTION ACTIVE
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Simple interaction for the message input
+    const messageInput = document.querySelector('.message-input');
+    const sendButton = document.querySelector('.send-button');
+    const messagesContainer = document.querySelector('.comms-messages');
+    const typingIndicator = document.querySelector('.typing-indicator');
+    
+    // Auto-focus the input field
+    messageInput.focus();
+    
+    // Send message function
+    function sendMessage() {
+      const message = messageInput.value.trim();
+      if (message === '') return;
+      
+      // Create new message element
+      const messageEl = document.createElement('div');
+      messageEl.className = 'message message-sent';
+      messageEl.innerHTML = `
+        <div class="message-content">${message}</div>
+        <div class="message-metadata">02:04:37:${Math.floor(Math.random() * 60).toString().padStart(2, '0')}</div>
+        <div class="message-indicator">YOU</div>
+      `;
+      
+      // Remove typing indicator if present
+      if (typingIndicator) {
+        typingIndicator.remove();
+      }
+      
+      // Add message to container
+      messagesContainer.appendChild(messageEl);
+      
+      // Clear input
+      messageInput.value = '';
+      
+      // Scroll to bottom
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      
+      // Simulate response after delay
+      setTimeout(() => {
+        // Add typing indicator
+        const newTypingIndicator = document.createElement('div');
+        newTypingIndicator.className = 'typing-indicator';
+        newTypingIndicator.innerHTML = `
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        `;
+        messagesContainer.appendChild(newTypingIndicator);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        
+        // Simulate response time
+        setTimeout(() => {
+          // Remove typing indicator
+          newTypingIndicator.remove();
+          
+          // Add response message
+          const responseEl = document.createElement('div');
+          responseEl.className = 'message message-received';
+          
+          // Simple responses based on message content
+          let responseContent = '';
+          const lowerMessage = message.toLowerCase();
+          
+          if (lowerMessage.includes('coolant') || lowerMessage.includes('engine')) {
+            responseContent = 'We recommend maintaining engine power below 85% until arrival to prevent further coolant system strain. Our techs have experience with this model and should be able to resolve the issue quickly.';
+          } else if (lowerMessage.includes('eta') || lowerMessage.includes('arrival')) {
+            responseContent = 'Your current arrival timeline is still within acceptable parameters. Docking Bay 17 will be ready for your scheduled arrival in 4 days, 7 hours.';
+          } else if (lowerMessage.includes('medical') || lowerMessage.includes('cargo')) {
+            responseContent = 'The medical supplies you're carrying have been flagged as high priority. Stellar Medical Corp representatives will meet you upon arrival for immediate transfer and inspection.';
+          } else {
+            responseContent = 'Message received, Captain. Please maintain your current course. We'll update you with any relevant information as you approach the Alpha Centauri system.';
+          }
+          
+          responseEl.innerHTML = `
+            <div class="message-content">${responseContent}</div>
+            <div class="message-metadata">02:04:${Math.floor(37 + Math.random() * 2)}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')}</div>
+            <div class="message-indicator">AC STATION</div>
+          `;
+          
+          messagesContainer.appendChild(responseEl);
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }, 3000);
+      }, 1000);
+    }
+    
+    // Event listeners
+    sendButton.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+    
+    // Contact selection
+    const contactItems = document.querySelectorAll('.contact-item');
+    contactItems.forEach(item => {
+      item.addEventListener('click', () => {
+        // Remove active class from all contacts
+        contactItems.forEach(contact => {
+          contact.classList.remove('active');
+        });
+        
+        // Add active class to clicked contact
+        item.classList.add('active');
+        
+        // Remove unread indicator
+        item.classList.remove('unread');
+        
+        // Update current contact display
+        const contactName = item.querySelector('div:first-child').textContent.replace(/^\s*\S+\s*/, '');
+        document.querySelector('.current-contact').textContent = contactName;
+      });
+    });
+  </script>
+</body>
+</html>
