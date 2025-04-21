@@ -5,6 +5,7 @@ import { SleepPod } from '../core/objects/sleep-pod';
 import { TimeManager } from '../managers/time-manager';
 import { DOMCSSLoader } from '../interfaces/dom-css-loader';
 import { InterfaceManager } from '../managers/interface-manager';
+import { CaptainsChair } from '../core/objects/captains-chair';
 
 // We'll set these when ship-init.ts calls createCompartmentObjects
 let timeManager: TimeManager | null = null;
@@ -57,14 +58,8 @@ export function createCompartmentObjects() {
         ['examine', 'look at', 'use', 'activate', 'access']
     ),
     
-    new BaseInteractableObject(
-        'Captain\'s Chair',
-        'The command seat with integrated control panels.',
-        'A well-worn but comfortable chair positioned for optimal view of all bridge systems. Small control panels are built into each armrest, offering quick access to essential ship functions. The synthetic leather is cracked in places from years of use.',
-        false,
-        ['chair', 'command chair', 'seat'],
-        ['examine', 'look at', 'sit', 'use']
-    ),
+    // Replace basic Captain's Chair with our specialized version that has time skip capabilities
+    new CaptainsChair(),
     
     // Replace the basic diagnostics panel with our interactive system diagnostics interface
     new SystemDiagnosticsInterface()

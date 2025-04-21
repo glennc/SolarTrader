@@ -21,15 +21,19 @@ export class StatusView {
     const statusDisplay = document.createElement('div');
     statusDisplay.className = 'time-skip-status';
     
+    // Create a wrapper for the text to prevent wrapping issues
+    const statusContent = document.createElement('span');
+    
     // Set appropriate status text based on state
     if (this.state.isSkipActive) {
-      statusDisplay.innerHTML = 'TIME SKIP IN PROGRESS <span>...</span>';
+      statusContent.innerHTML = 'TIME SKIP IN PROGRESS <span>...</span>';
     } else if (this.state.skipProgressInterval !== null) {
-      statusDisplay.innerHTML = 'TIME SKIP PAUSED';
+      statusContent.innerHTML = 'TIME SKIP PAUSED';
     } else {
-      statusDisplay.innerHTML = `SKIP ${this.state.selectedSkipHours} HOUR${this.state.selectedSkipHours !== 1 ? 'S' : ''}?`;
+      statusContent.innerHTML = `SKIP ${this.state.selectedSkipHours} HOUR${this.state.selectedSkipHours !== 1 ? 'S' : ''}?`;
     }
     
+    statusDisplay.appendChild(statusContent);
     return statusDisplay;
   }
 }

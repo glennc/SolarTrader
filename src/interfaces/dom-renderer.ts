@@ -1,16 +1,30 @@
 /**
  * Handles direct manipulation of the HTML DOM to display game output.
  */
+import { TimeManager } from '../managers/time-manager';
+import { TimeFormatter } from './components/time-formatter';
+
 export class DOMRenderer {
     private container: HTMLElement;
     private outputElement!: HTMLElement;
     private timeElement!: HTMLElement;
+    private watchElement!: HTMLElement;
     private alertLight!: HTMLElement;
     private inputElement!: HTMLInputElement;
     private terminalContainer!: HTMLElement;
     private commandHandler: ((input: string) => void) | null = null;
-    private cycleNumber: number = 1;
-    private shiftNumber: number = 1;
+    private timeManager: TimeManager | null = null;
+    private timeUpdateInterval: number | null = null;
+
+    // Ship watch schedule (traditional naval watches adapted for space)
+    private readonly WATCHES = [
+        { name: "FIRST WATCH", start: 20, end: 0 },
+        { name: "MIDDLE WATCH", start: 0, end: 4 },
+        { name: "MORNING WATCH", start: 4, end: 8 },
+        { name: "FORENOON WATCH", start: 8, end: 12 },
+        { name: "AFTERNOON WATCH", start: 12, end: 16 },
+        { name: "EVENING WATCH", start: 16, end: 20 }
+    ];
 
     constructor(container: HTMLElement) {
         this.container = container;
@@ -19,6 +33,15 @@ export class DOMRenderer {
         this.createInterface();
         
         console.log("DOMRenderer initialized.");
+    }
+    
+    /**
+     * Sets the time manager for this renderer
+     * @param timeManager The time manager instance
+     */
+    setTimeManager(timeManager: TimeManager): void {
+        this.timeManager = timeManager;
+        this.startTimeUpdates();
     }
     
     /**
@@ -65,11 +88,23 @@ export class DOMRenderer {
         `;
         statusIndicators.appendChild(this.alertLight);
         
-        // Create cycle/shift timer
+        // Create the time indicators container
+        const timeContainer = document.createElement('div');
+        timeContainer.className = 'time-container';
+        
+        // Create standard time display
         this.timeElement = document.createElement('div');
         this.timeElement.className = 'terminal-time';
-        this.timeElement.textContent = 'CYCLE 001 · SHIFT 1';
-        statusIndicators.appendChild(this.timeElement);
+        this.timeElement.textContent = 'T+00:00:00:00';
+        timeContainer.appendChild(this.timeElement);
+        
+        // Create watch display 
+        this.watchElement = document.createElement('div');
+        this.watchElement.className = 'terminal-watch';
+        this.watchElement.textContent = 'FIRST WATCH · DAY 1';
+        timeContainer.appendChild(this.watchElement);
+        
+        statusIndicators.appendChild(timeContainer);
         
         // Add elements to header
         terminalHeader.appendChild(statusContainer);
@@ -118,25 +153,76 @@ export class DOMRenderer {
         // Add everything to the container
         this.terminalContainer.appendChild(terminalInner);
         this.container.appendChild(this.terminalContainer);
-        
-        // Start the cycle/shift time updates
-        this.startCycleUpdates();
     }
     
     /**
-     * Updates the game time display using cycles and shifts instead of real time
+     * Updates both standard mission time and watch time displays
      */
-    private startCycleUpdates(): void {
-        // Update cycles roughly every 20 seconds, shifts every 5 cycles
-        setInterval(() => {
-            this.cycleNumber++;
-            
-            if (this.cycleNumber % 5 === 0) {
-                this.shiftNumber = (this.shiftNumber % 3) + 1; // Shifts cycle 1-2-3
+    private startTimeUpdates(): void {
+        if (!this.timeManager) return;
+        
+        // Clear existing interval if any
+        if (this.timeUpdateInterval) {
+            clearInterval(this.timeUpdateInterval);
+        }
+        
+        // Update time display every second
+        this.timeUpdateInterval = window.setInterval(() => {
+            if (this.timeManager) {
+                // Update mission time
+                const elapsedTime = this.timeManager.getElapsedTime();
+                this.timeElement.textContent = TimeFormatter.formatMissionTime(elapsedTime);
+                
+                // Update watch display
+                this.updateWatchDisplay();
             }
-            
-            this.timeElement.textContent = `CYCLE ${this.cycleNumber.toString().padStart(3, '0')} · SHIFT ${this.shiftNumber}`;
-        }, 20000); // 20 seconds per cycle
+        }, 1000);
+        
+        // Initial updates
+        const elapsedTime = this.timeManager.getElapsedTime();
+        this.timeElement.textContent = TimeFormatter.formatMissionTime(elapsedTime);
+        this.updateWatchDisplay();
+    }
+    
+    /**
+     * Determines the current watch based on game time and updates display
+     */
+    private updateWatchDisplay(): void {
+        if (!this.timeManager) return;
+        
+        const currentHour = this.timeManager.getCurrentHour();
+        const currentDay = this.timeManager.getCurrentDay() + 1; // Display day 1 instead of day 0
+        
+        // Find the current watch
+        let currentWatch = this.WATCHES[0]; // Default
+        
+        for (const watch of this.WATCHES) {
+            if (watch.start <= watch.end) {
+                // Normal watch span (e.g., 4-8)
+                if (currentHour >= watch.start && currentHour < watch.end) {
+                    currentWatch = watch;
+                    break;
+                }
+            } else {
+                // Watch spans midnight (e.g., 20-0)
+                if (currentHour >= watch.start || currentHour < watch.end) {
+                    currentWatch = watch;
+                    break;
+                }
+            }
+        }
+        
+        this.watchElement.textContent = `${currentWatch.name} · DAY ${currentDay}`;
+    }
+    
+    /**
+     * Cleans up all the intervals
+     */
+    destroy(): void {
+        if (this.timeUpdateInterval) {
+            clearInterval(this.timeUpdateInterval);
+            this.timeUpdateInterval = null;
+        }
     }
     
     /**

@@ -12,6 +12,7 @@ export { SpecializedInteractableObject } from './specialized-object';
 export { Datapad, type DatapadLog, type DatapadContract } from './datapad';
 export { MaintenanceToolkit, type ToolItem } from './maintenance-toolkit';
 export { TimeSkipTerminal, type SystemProjection, type ProjectedAlert, type SystemChangeResult } from './time-skip-terminal';
+export { CaptainsChair } from './captains-chair';
 
 // Add new specialized object exports here as they are implemented
 // export { FoodPreparationStation } from './food-preparation-station';

@@ -20,8 +20,15 @@ export interface SystemStates {
  */
 export class TimeSkipState {
   // Configuration
-  public skipOptions = [1, 4, 8]; // Hours options for time skip
+  public skipOptions = [1, 4, 8, 12, 24]; // Hours options for time skip
   public selectedSkipHours = 4; // Default selected hours
+  
+  // Acceleration factors
+  public accelerationOptions = [1, 5, 10, 20, 50, 100]; // Available acceleration factors
+  public selectedAccelerationFactor = 20; // Default acceleration factor
+  
+  // Target time mode vs. continuous mode
+  public useTargetTime = true; // Default to target time mode
   
   // Status flags
   public isSkipActive = false;
@@ -67,6 +74,26 @@ export class TimeSkipState {
    */
   setSelectedSkipHours(hours: number): void {
     this.selectedSkipHours = hours;
+  }
+  
+  /**
+   * Sets the selected acceleration factor
+   * @param factor Acceleration factor to use
+   */
+  setAccelerationFactor(factor: number): void {
+    if (this.accelerationOptions.includes(factor)) {
+      this.selectedAccelerationFactor = factor;
+    } else {
+      console.warn(`Invalid acceleration factor: ${factor}`);
+    }
+  }
+  
+  /**
+   * Sets whether to use target time mode or continuous acceleration
+   * @param useTarget True for target time mode, false for continuous acceleration
+   */
+  setUseTargetTime(useTarget: boolean): void {
+    this.useTargetTime = useTarget;
   }
   
   /**

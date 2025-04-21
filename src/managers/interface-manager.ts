@@ -123,6 +123,9 @@ export class InterfaceManager {
                 console.error("InterfaceManager: Cannot find terminal container");
                 return;
             }
+        } else {
+            // Clear the interface container if it already exists
+            interfaceContainer.innerHTML = '';
         }
         
         // Expand the terminal container for system interface mode
@@ -139,6 +142,11 @@ export class InterfaceManager {
         // If system needs CSSLoader, provide it before rendering
         if ('setCssLoader' in system) {
             (system as any).setCssLoader(this.cssLoader);
+        }
+        
+        // If system needs InterfaceManager, provide it before rendering
+        if ('setInterfaceManager' in system) {
+            (system as any).setInterfaceManager(this);
         }
         
         // Hide the terminal output and input temporarily

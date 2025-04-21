@@ -213,11 +213,23 @@ export class CoolantSystemInterface extends BaseSystemInterface {
             // Replace the existing content instead of appending
             existingContent.replaceWith(container);
         } else {
-            // Initial render, add to terminal output
-            const terminalOutput = document.querySelector('.terminal-output');
-            if (terminalOutput) {
-                terminalOutput.innerHTML = '';
-                terminalOutput.appendChild(container);
+            // Find the interface container first (this is the key change)
+            const interfaceContainer = document.getElementById('interface-container');
+            if (interfaceContainer) {
+                // Clear and append to the interface container
+                interfaceContainer.innerHTML = '';
+                interfaceContainer.appendChild(container);
+                console.log("CoolantSystemInterface: Rendered to interface container");
+            } else {
+                // Fallback to terminal output (original behavior)
+                const terminalOutput = document.querySelector('.terminal-output');
+                if (terminalOutput) {
+                    terminalOutput.innerHTML = '';
+                    terminalOutput.appendChild(container);
+                    console.log("CoolantSystemInterface: Rendered to terminal output (fallback)");
+                } else {
+                    console.error("CoolantSystemInterface: Could not find render target");
+                }
             }
         }
         

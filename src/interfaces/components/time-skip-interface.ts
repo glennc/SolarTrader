@@ -65,10 +65,6 @@ export class TimeSkipInterface implements SystemInterface {
       () => this.onTimeSkipComplete(),
       (progress) => this.onTimeSkipProgress(progress)
     );
-    
-    // Load the CSS for this interface
-    this.cssLoader.loadCSS('/css/components/time-display.css', 'time-display');
-    this.cssLoader.loadCSS('/css/components/time-skip-interface.css', 'time-skip-interface');
   }
   
   /**
@@ -92,6 +88,10 @@ export class TimeSkipInterface implements SystemInterface {
   renderInterface(): () => void {
     console.log('Rendering TimeSkipInterface');
     
+    // Load CSS for this interface
+    this.cssLoader.loadCSS('/css/components/time-display.css', 'time-display');
+    this.cssLoader.loadCSS('/css/components/time-skip-interface.css', 'time-skip-interface');
+    
     // Create terminal container
     const terminalContainer = document.createElement('div');
     terminalContainer.className = 'terminal';
@@ -100,9 +100,18 @@ export class TimeSkipInterface implements SystemInterface {
     const terminalInner = document.createElement('div');
     terminalInner.className = 'terminal-inner';
     
-    // Create terminal header using HeaderView
-    const headerView = new HeaderView(this.timeManager);
+    // Create terminal header using HeaderView with the timeSkipService
+    const headerView = new HeaderView(
+      this.timeManager,
+      this.domRenderer,
+      this.timeSkipService
+    );
+    
+    // Add the header to the interface
     terminalInner.appendChild(headerView.render());
+    
+    // Set up the skipToWatch functionality with update callback
+    headerView.setTimeSkipService(this.timeSkipService, () => this.updateInterface());
     
     // Create content area
     this.contentArea = document.createElement('div');
@@ -165,7 +174,7 @@ export class TimeSkipInterface implements SystemInterface {
     this.container.innerHTML = '';
     this.container.appendChild(terminalContainer);
     
-    // Create the time display component
+    /* Remove the redundant time display component since we have it in the header
     const timeDisplayContainer = document.createElement('div');
     timeDisplayContainer.className = 'time-display-container';
     this.contentArea.appendChild(timeDisplayContainer);
@@ -177,6 +186,7 @@ export class TimeSkipInterface implements SystemInterface {
       false, // Don't show ETA
       true   // Show day/night cycle
     );
+    */
     
     // Generate projected alerts and update display
     this.timeSkipService.generateProjectedAlerts(this.state.selectedSkipHours);
@@ -186,6 +196,12 @@ export class TimeSkipInterface implements SystemInterface {
     return () => {
       if (this.timeDisplay) {
         this.timeDisplay.destroy();
+        this.timeDisplay = null;
+      }
+      
+      // Stop the header view's interval
+      if (headerView) {
+        headerView.destroy();
       }
       
       if (this.state.skipProgressInterval) {
@@ -227,22 +243,47 @@ export class TimeSkipInterface implements SystemInterface {
    * Start the time skip process.
    */
   private startTimeSkip(): void {
-    this.timeSkipService.startTimeSkip(
-      () => {
-        // Update elapsed time display
-        const timeElapsed = this.contentArea?.querySelector('.time-elapsed');
-        if (timeElapsed) {
-          const formattedTime = this.timeSkipService.getFormattedElapsedTime();
-          timeElapsed.textContent = `TIME ELAPSED: ${formattedTime}`;
+    // Different behavior based on mode
+    if (this.state.useTargetTime) {
+      // Target time mode: Skip to a specific future time
+      this.timeSkipService.skipToTargetTime(
+        this.state.selectedSkipHours,
+        this.state.selectedAccelerationFactor,
+        () => {
+          // Update elapsed time display
+          const timeElapsed = this.contentArea?.querySelector('.time-elapsed');
+          if (timeElapsed) {
+            const formattedTime = this.timeSkipService.getFormattedElapsedTime();
+            timeElapsed.textContent = `TIME ELAPSED: ${formattedTime}`;
+          }
+          
+          // Update time speed indicator
+          const timeSpeed = this.contentArea?.querySelector('.time-speed');
+          if (timeSpeed) {
+            timeSpeed.textContent = `(SIMULATING AT ${this.state.selectedAccelerationFactor}x SPEED TO TARGET)`;
+          }
         }
-        
-        // Update time speed indicator
-        const timeSpeed = this.contentArea?.querySelector('.time-speed');
-        if (timeSpeed) {
-          timeSpeed.textContent = '(SIMULATING AT 20x NORMAL SPEED)';
+      );
+    } else {
+      // Continuous acceleration mode: Just speed up time with no end point
+      this.timeSkipService.setTimeAcceleration(
+        this.state.selectedAccelerationFactor,
+        () => {
+          // Update elapsed time display
+          const timeElapsed = this.contentArea?.querySelector('.time-elapsed');
+          if (timeElapsed) {
+            const formattedTime = this.timeSkipService.getFormattedElapsedTime();
+            timeElapsed.textContent = `TIME ELAPSED: ${formattedTime}`;
+          }
+          
+          // Update time speed indicator
+          const timeSpeed = this.contentArea?.querySelector('.time-speed');
+          if (timeSpeed) {
+            timeSpeed.textContent = `(SIMULATING AT ${this.state.selectedAccelerationFactor}x SPEED)`;
+          }
         }
-      }
-    );
+      );
+    }
     
     // Update interface for active state
     this.updateInterface();
@@ -253,6 +294,29 @@ export class TimeSkipInterface implements SystemInterface {
    */
   private pauseTimeSkip(): void {
     this.timeSkipService.pauseTimeSkip();
+    this.updateInterface();
+  }
+  
+  /**
+   * Resume a paused time skip process.
+   */
+  private resumeTimeSkip(): void {
+    this.timeSkipService.resumeTimeSkip(() => {
+      // Update elapsed time display
+      const timeElapsed = this.contentArea?.querySelector('.time-elapsed');
+      if (timeElapsed) {
+        const formattedTime = this.timeSkipService.getFormattedElapsedTime();
+        timeElapsed.textContent = `TIME ELAPSED: ${formattedTime}`;
+      }
+      
+      // Update time speed indicator
+      const timeSpeed = this.contentArea?.querySelector('.time-speed');
+      if (timeSpeed) {
+        const speedText = this.timeSkipService.getSpeedStatusText();
+        timeSpeed.textContent = speedText;
+      }
+    });
+    
     this.updateInterface();
   }
   
@@ -324,10 +388,13 @@ export class TimeSkipInterface implements SystemInterface {
     console.log('Exiting TimeSkipInterface');
     
     // Cancel any active time skip before exiting
-    this.cancelTimeSkip();
+    if (this.state.isSkipActive || this.state.skipProgressInterval !== null) {
+      this.timeSkipService.cancelTimeSkip();
+    }
     
     // Use the interface manager if available
     if (this.interfaceManager) {
+      console.log('TimeSkipInterface: Using interface manager to return to first person view');
       this.interfaceManager.returnToFirstPerson();
       return;
     }

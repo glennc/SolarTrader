@@ -19,6 +19,19 @@
   margin: 0 auto;
 }
 
+/* Make terminal fill available space when in system interface mode */
+#interface-container .terminal {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  min-height: 500px;
+  max-height: none;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
 /* CRT scan lines effect */
 .terminal::before {
   content: "";
@@ -99,6 +112,7 @@
   align-items: center;
   border-bottom: 1px solid var(--terminal-border, #114455);
   text-shadow: 0 0 5px var(--terminal-glow, rgba(51, 204, 255, 0.4));
+  position: relative; /* Ensure proper positioning context */
 }
 
 .terminal-header-text {
@@ -106,10 +120,18 @@
   letter-spacing: 1px;
 }
 
+.terminal-time {
+  font-size: 16px;
+  color: var(--terminal-highlight, #55ffaa);
+  font-family: 'Share Tech Mono', monospace;
+  position: relative; /* Ensure it doesn't overlap with other elements */
+  margin-left: auto; /* Push to the right */
+}
+
 .terminal-content {
   flex: 1;
   padding: 15px;
-  overflow: hidden;
+  overflow-y: auto; /* Changed from hidden to auto to enable vertical scrolling */
   background-color: rgba(0, 10, 15, 0.7);
   display: flex;
   flex-direction: column;
@@ -160,6 +182,15 @@
   text-align: center;
   margin-top: 10px;
   margin-bottom: 20px;
+  min-height: 30px; /* Add a minimum height to prevent collapsing */
+  width: 100%; /* Ensure full width */
+  padding: 5px 10px; /* Add some padding */
+  display: flex; /* Use flexbox for better text handling */
+  justify-content: center; /* Center text horizontally */
+  align-items: center; /* Center text vertically */
+  flex-wrap: nowrap; /* Prevent wrapping of the text content */
+  overflow: hidden; /* Hide overflow */
+  box-sizing: border-box; /* Include padding in width calculation */
 }
 
 .time-skip-status span {
@@ -181,6 +212,12 @@
   display: flex;
   flex: 1;
   gap: 20px;
+  min-height: 250px; /* Ensure minimum height for the display */
+}
+
+/* In system interface mode, make the display larger */
+#interface-container .main-display {
+  min-height: 350px;
 }
 
 .ship-visuals {
@@ -190,6 +227,12 @@
   border: 1px solid var(--terminal-dim, #115566);
   border-radius: 4px;
   background-color: rgba(0, 0, 0, 0.5);
+  min-height: 200px; /* Ensure minimum height */
+}
+
+/* In system interface mode, make ship visuals fill more space */
+#interface-container .ship-visuals {
+  min-height: 300px;
 }
 
 .ship-stats {
@@ -197,6 +240,7 @@
   display: flex;
   flex-direction: column;
   gap: 15px;
+  min-width: 250px; /* Ensure minimum width so content doesn't wrap */
 }
 
 .star-field {
@@ -309,6 +353,53 @@
   border-radius: 4px;
   padding: 10px;
   background-color: rgba(0, 34, 51, 0.5);
+}
+
+/* Special styling for the alerts card in Captain's Chair */
+#projected-alerts-card {
+  min-height: 80px; /* Ensure minimum height for alert display */
+}
+
+#projected-alerts-card .stat-row {
+  display: flex;
+  flex-wrap: nowrap; /* Prevent text wrapping */
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  min-height: 24px; /* Ensure each row has minimum height */
+}
+
+#projected-alerts-card .stat-row:first-of-type {
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px dashed var(--terminal-dim, #115566);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+#projected-alerts-card .stat-label {
+  flex: 0 0 auto; /* Don't allow shrinking of the label */
+  margin-right: 10px;
+  white-space: nowrap; /* Prevent label wrapping */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 120px; /* Force minimum width for the label */
+  width: auto !important; /* Override any width being set to 8px */
+}
+
+/* Explicit style for Alert Status label to prevent width issues */
+#projected-alerts-card .stat-row:first-of-type .stat-label {
+  width: auto !important;
+  min-width: 120px !important;
+  display: inline-block;
+  flex: 0 0 auto;
+}
+
+#projected-alerts-card .stat-value {
+  flex: 0 0 auto; /* Don't allow shrinking of the value */
+  text-align: right;
+  white-space: nowrap; /* Prevent value wrapping */
 }
 
 .stat-card.alert-flash {
@@ -455,6 +546,56 @@
   animation: blink 1s infinite;
 }
 
+/* Fix for the Alert Status display */
+.alert-status {
+  font-size: 14px;
+  color: var(--terminal-warning, #ffcc00);
+  display: flex;
+  align-items: center;
+  padding: 5px 10px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--terminal-warning, #ffcc00);
+  border-radius: 4px;
+  margin: 10px 0;
+  position: relative;
+  width: auto;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.alert-status::before {
+  content: "⚠";
+  margin-right: 8px;
+}
+
+.alert-status-text {
+  font-weight: bold;
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: calc(100% - 20px); /* Account for the warning icon */
+}
+
+/* Special styling for Alert Status: Normal */
+.alert-status-normal {
+  min-height: 24px;
+  align-items: center;
+  margin-top: 10px;
+  padding: 5px 0;
+}
+
+.alert-status-normal .stat-label {
+  font-weight: bold;
+  white-space: nowrap;
+  margin-right: 10px;
+}
+
+.alert-status-normal .stat-value {
+  color: var(--terminal-highlight, #55ffaa);
+  white-space: nowrap;
+}
+
 /* Position the time display component */
 .time-display-container {
   position: absolute;
@@ -474,4 +615,10 @@
   50% { opacity: 0.5; }
   51% { opacity: 1; }
   100% { opacity: 1; }
+}
+
+#interface-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }

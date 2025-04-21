@@ -1,39 +1,44 @@
 import { TimeSkipState } from '../models/time-skip-state';
+import { TimeSkipService } from '../services/time-skip-service';
 
 /**
  * Footer view for the time skip interface
  */
 export class FooterView {
   private state: TimeSkipState;
+  private timeSkipService: TimeSkipService;
   private onStartCallback: () => void;
   private onPauseCallback: () => void;
   private onCancelCallback: () => void;
   private onDetailsCallback: () => void;
+  private onExitCallback: () => void;
   
   /**
    * Creates a new FooterView.
    * @param state Reference to the TimeSkipState
-   * @param timeSkipService Reference to the TimeSkipService (not used directly in this view)
+   * @param timeSkipService Reference to the TimeSkipService
    * @param onStart Callback for start button
    * @param onPause Callback for pause button
    * @param onCancel Callback for cancel button
    * @param onDetails Callback for details button
-   * @param onExit Callback for exit button (not used directly in this view)
+   * @param onExit Callback for exit button
    */
   constructor(
     state: TimeSkipState,
-    _timeSkipService: any,
+    timeSkipService: TimeSkipService,
     onStart: () => void,
     onPause: () => void,
     onCancel: () => void,
     onDetails: () => void,
-    _onExit: () => void
+    onExit: () => void
   ) {
     this.state = state;
+    this.timeSkipService = timeSkipService;
     this.onStartCallback = onStart;
     this.onPauseCallback = onPause;
     this.onCancelCallback = onCancel;
     this.onDetailsCallback = onDetails;
+    this.onExitCallback = onExit;
   }
   
   /**
@@ -48,11 +53,23 @@ export class FooterView {
     
     // Set status text based on current state
     if (this.state.isSkipActive) {
-      status.textContent = 'SYSTEM STATUS: AUTOMATED MAINTENANCE ACTIVE';
+      if (this.state.useTargetTime) {
+        status.textContent = 'SYSTEM STATUS: TIME SKIP IN PROGRESS';
+      } else {
+        status.textContent = 'SYSTEM STATUS: TIME ACCELERATION ACTIVE';
+      }
     } else if (this.state.skipProgressInterval !== null) {
       status.textContent = 'SYSTEM STATUS: PAUSED';
     } else {
       status.textContent = 'SYSTEM STATUS: READY';
+    }
+    
+    // Add additional information about the active time process
+    if (this.state.isSkipActive) {
+      const skipDetails = document.createElement('div');
+      skipDetails.className = 'skip-details';
+      skipDetails.textContent = this.timeSkipService.getSkipDescription();
+      status.appendChild(skipDetails);
     }
     
     footer.appendChild(status);
@@ -60,7 +77,7 @@ export class FooterView {
     const controls = document.createElement('div');
     controls.className = 'footer-controls';
     
-    // Start/Pause button
+    // Start/Pause/Resume button
     const startButton = document.createElement('span');
     startButton.id = 'start-button';
     
@@ -71,16 +88,29 @@ export class FooterView {
       startButton.textContent = 'RESUME';
       startButton.addEventListener('click', this.onStartCallback);
     } else {
-      startButton.textContent = 'START';
+      // Button text should reflect the current mode
+      if (this.state.useTargetTime) {
+        startButton.textContent = 'START SKIP';
+      } else {
+        startButton.textContent = 'START ACCELERATION';
+      }
       startButton.addEventListener('click', this.onStartCallback);
     }
     
     controls.appendChild(startButton);
     
-    // Cancel button
+    // Cancel/Return button
     const cancelButton = document.createElement('span');
-    cancelButton.textContent = 'CANCEL';
-    cancelButton.addEventListener('click', this.onCancelCallback);
+    cancelButton.id = 'cancel-button';
+    
+    if (this.state.isSkipActive || this.state.skipProgressInterval !== null) {
+      cancelButton.textContent = 'CANCEL';
+      cancelButton.addEventListener('click', this.onCancelCallback);
+    } else {
+      cancelButton.textContent = 'RETURN TO SHIP';
+      cancelButton.addEventListener('click', this.onExitCallback);
+    }
+    
     controls.appendChild(cancelButton);
     
     // Details button
@@ -88,6 +118,14 @@ export class FooterView {
     detailsButton.textContent = 'DETAILS';
     detailsButton.addEventListener('click', this.onDetailsCallback);
     controls.appendChild(detailsButton);
+    
+    // Add an explicit exit button that's always visible
+    const exitButton = document.createElement('span');
+    exitButton.textContent = 'EXIT';
+    exitButton.classList.add('exit-button');
+    exitButton.style.color = 'var(--terminal-warning, #ffcc00)'; // Make it stand out
+    exitButton.addEventListener('click', this.onExitCallback);
+    controls.appendChild(exitButton);
     
     footer.appendChild(controls);
     

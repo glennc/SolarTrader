@@ -1,4 +1,5 @@
 import { TimeSkipState } from '../models/time-skip-state';
+import { TimeFormatter } from '../../time-formatter';
 
 /**
  * System monitor view for the time skip interface
@@ -53,59 +54,85 @@ export class SystemMonitorView {
       alertsCard.appendChild(header);
     }
     
-    // If no alerts, show a "no alerts" message
+    // If no alerts, show a completely different structure for "ALERT STATUS: NORMAL"
     if (this.state.projectedAlerts.length === 0) {
-      const row = document.createElement('div');
-      row.className = 'stat-row';
+      // Create a completely different structure for normal status display
+      const normalStatusContainer = document.createElement('div');
+      normalStatusContainer.style.display = 'flex';
+      normalStatusContainer.style.justifyContent = 'space-between';
+      normalStatusContainer.style.alignItems = 'center';
+      normalStatusContainer.style.padding = '5px 0';
+      normalStatusContainer.style.margin = '10px 0';
+      normalStatusContainer.style.borderBottom = '1px dashed var(--terminal-dim, #115566)';
       
-      const label = document.createElement('span');
-      label.className = 'stat-label';
-      label.textContent = 'NO PROJECTED ALERTS';
-      row.appendChild(label);
+      const statusLabelSpan = document.createElement('span');
+      statusLabelSpan.textContent = 'ALERT STATUS:';
+      statusLabelSpan.style.color = 'var(--terminal-text, #33ccff)';
+      statusLabelSpan.style.fontWeight = 'bold';
+      statusLabelSpan.style.minWidth = '120px';
+      statusLabelSpan.style.display = 'inline-block';
       
-      alertsCard.appendChild(row);
+      const statusValueSpan = document.createElement('span');
+      statusValueSpan.textContent = 'NORMAL';
+      statusValueSpan.style.color = 'var(--terminal-highlight, #55ffaa)';
+      statusValueSpan.style.fontWeight = 'bold';
+      
+      normalStatusContainer.appendChild(statusLabelSpan);
+      normalStatusContainer.appendChild(statusValueSpan);
+      
+      alertsCard.appendChild(normalStatusContainer);
       return;
     }
     
-    // Add each alert
+    // Add each alert in a consistently styled container
     this.state.projectedAlerts.forEach(alert => {
-      const row = document.createElement('div');
-      row.className = 'stat-row';
-      
-      const label = document.createElement('span');
-      label.className = 'stat-label';
-      
-      // Add alert indicator for triggered alerts
+      // For triggered alerts, create a special alert status display
       if (alert.triggered) {
-        const indicator = document.createElement('span');
-        indicator.className = 'alert-indicator';
-        label.appendChild(indicator);
-      }
-      
-      label.appendChild(document.createTextNode(alert.system + ':'));
-      row.appendChild(label);
-      
-      const value = document.createElement('span');
-      value.className = 'stat-value';
-      
-      if (alert.status === 'WARNING') {
-        value.classList.add('stat-warn');
-      } else if (alert.status === 'DANGER') {
-        value.classList.add('stat-danger');
-      }
-      
-      // Format the alert time as hours and minutes
-      const hours = Math.floor(alert.triggerMinute / 60);
-      const minutes = alert.triggerMinute % 60;
-      
-      if (alert.triggered) {
-        value.textContent = alert.status;
+        const alertStatus = document.createElement('div');
+        alertStatus.className = 'alert-status';
+        
+        // Use proper status text rendering without trying to access undefined message property
+        const statusText = `${alert.system} ${alert.status}`;
+        
+        // Create a text span to hold the status
+        const statusSpan = document.createElement('span');
+        statusSpan.className = 'alert-status-text';
+        statusSpan.textContent = statusText;
+        
+        // Append status text to the alert container
+        alertStatus.appendChild(statusSpan);
+        
+        // Add to the card
+        alertsCard.appendChild(alertStatus);
       } else {
-        value.textContent = `${alert.status} @ ${hours}h ${minutes}m`;
+        // Standard row for upcoming alerts
+        const row = document.createElement('div');
+        row.className = 'stat-row';
+        
+        const label = document.createElement('span');
+        label.className = 'stat-label';
+        label.textContent = alert.system + ':';
+        row.appendChild(label);
+        
+        const value = document.createElement('span');
+        value.className = 'stat-value';
+        
+        if (alert.status === 'WARNING') {
+          value.classList.add('stat-warn');
+        } else if (alert.status === 'DANGER') {
+          value.classList.add('stat-danger');
+        }
+        
+        // Format the alert time as hours and minutes
+        const hours = Math.floor(alert.triggerMinute / 60);
+        const minutes = alert.triggerMinute % 60;
+        
+        // Use standardized time formatter
+        value.textContent = TimeFormatter.formatAlertTime(hours, minutes, alert.status);
+        
+        row.appendChild(value);
+        alertsCard.appendChild(row);
       }
-      
-      row.appendChild(value);
-      alertsCard.appendChild(row);
     });
   }
   

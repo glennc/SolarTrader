@@ -1,5 +1,6 @@
 import { TimeManager } from '../../../../managers/time-manager';
 import { SleepPodState } from '../models/sleep-pod-state';
+import { TimeFormatter } from '../../time-formatter';
 
 /**
  * Service that handles the sleep pod business logic
@@ -25,20 +26,8 @@ export class SleepService {
    * @returns Formatted wake time string
    */
   calculateWakeTime(hours: number): string {
-    // Clone current time
-    const currentTime = this.timeManager.getCurrentTime();
-    
-    // Add the sleep duration
-    const wakeTime = new Date(currentTime.getTime() + (hours * 60 * 60 * 1000));
-    
-    // Format the time
-    const day = wakeTime.getDate().toString().padStart(2, '0');
-    const month = (wakeTime.getMonth() + 1).toString().padStart(2, '0');
-    const year = wakeTime.getFullYear();
-    const hour = wakeTime.getHours().toString().padStart(2, '0');
-    const minute = wakeTime.getMinutes().toString().padStart(2, '0');
-    
-    return `${day}.${month}.${year} ${hour}:${minute}`;
+    // Use the standardized time formatter
+    return TimeFormatter.calculateWakeTime(this.timeManager, hours);
   }
   
   /**

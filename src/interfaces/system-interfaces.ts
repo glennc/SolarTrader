@@ -11,6 +11,7 @@ export { BaseSystemInterface } from './base-system-interfaces';
 
 // Export specific system interfaces
 export { CoolantSystemInterface } from './systems/coolant-system-interface';
+export { SystemDiagnosticsInterface } from './systems/system-diagnostics-interface';
 
 // Add new system interface exports here as they are implemented
 // export { NavigationSystemInterface } from './systems/navigation-system-interface';
