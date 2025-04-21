@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sleep Pod Interface</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap');
+    
+    :root {
+      --terminal-bg: #000507;
+      --terminal-text: #33ccff;
+      --terminal-highlight: #55ffaa;
+      --terminal-dim: #115566;
+      --terminal-warning: #ffcc00;
+      --terminal-danger: #ff3355;
+      --terminal-header: #002233;
+      --terminal-border: #114455;
+      --terminal-glow: rgba(51, 204, 255, 0.4);
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      background-color: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--terminal-text);
+      overflow: hidden;
+    }
+    
+    .terminal {
+      width: 90%;
+      max-width: 800px;
+      background-color: var(--terminal-bg);
+      border: 2px solid var(--terminal-border);
+      border-radius: 8px;
+      box-shadow: 0 0 20px var(--terminal-glow), inset 0 0 10px rgba(0, 0, 0, 0.8);
+      position: relative;
+      overflow: hidden;
+      padding: 2px;
+      height: 90vh;
+      max-height: 600px;
+    }
+    
+    /* CRT scan lines effect */
+    .terminal::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(
+        rgba(51, 204, 255, 0.03) 50%, 
+        rgba(0, 0, 0, 0) 51%
+      );
+      background-size: 100% 4px;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0.2;
+      animation: scanlines 8s linear infinite;
+    }
+    
+    /* Subtle flicker effect */
+    .terminal::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(51, 204, 255, 0.02);
+      opacity: 0;
+      z-index: 9;
+      pointer-events: none;
+      animation: flicker 6s infinite;
+    }
+    
+    @keyframes scanlines {
+      0% { background-position: 0 0; }
+      100% { background-position: 0 100%; }
+    }
+    
+    @keyframes flicker {
+      0% { opacity: 0; }
+      5% { opacity: 0.1; }
+      10% { opacity: 0; }
+      15% { opacity: 0; }
+      20% { opacity: 0.1; }
+      25% { opacity: 0; }
+      30% { opacity: 0; }
+      35% { opacity: 0.05; }
+      40% { opacity: 0; }
+      45% { opacity: 0; }
+      50% { opacity: 0.1; }
+      55% { opacity: 0; }
+      60% { opacity: 0; }
+      65% { opacity: 0; }
+      70% { opacity: 0.1; }
+      75% { opacity: 0; }
+      80% { opacity: 0; }
+      85% { opacity: 0.05; }
+      90% { opacity: 0; }
+      95% { opacity: 0; }
+      100% { opacity: 0; }
+    }
+    
+    .terminal-inner {
+      border: 1px solid var(--terminal-border);
+      height: 100%;
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .terminal-header {
+      background-color: var(--terminal-header);
+      padding: 10px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--terminal-border);
+      text-shadow: 0 0 5px var(--terminal-glow);
+    }
+    
+    .terminal-header-text {
+      font-size: 18px;
+      letter-spacing: 1px;
+    }
+    
+    .terminal-time {
+      font-family: 'VT323', monospace;
+      font-size: 18px;
+      color: var(--terminal-highlight);
+      animation: blink 2s infinite;
+    }
+    
+    @keyframes blink {
+      0% { opacity: 1; }
+      49% { opacity: 1; }
+      50% { opacity: 0.7; }
+      51% { opacity: 1; }
+      100% { opacity: 1; }
+    }
+    
+    .terminal-content {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      background-color: rgba(0, 10, 15, 0.7);
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Custom scrollbar */
+    .terminal-content::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .terminal-content::-webkit-scrollbar-track {
+      background: rgba(0, 34, 51, 0.5);
+    }
+    
+    .terminal-content::-webkit-scrollbar-thumb {
+      background: var(--terminal-dim);
+      border-radius: 4px;
+    }
+    
+    .terminal-content::-webkit-scrollbar-thumb:hover {
+      background: var(--terminal-text);
+    }
+    
+    .sleep-pod-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    
+    .sleep-pod-controls {
+      display: flex;
+      margin-bottom: 20px;
+      gap: 15px;
+    }
+    
+    .sleep-pod-status {
+      flex: 1;
+      background-color: rgba(0, 20, 30, 0.6);
+      border: 1px solid var(--terminal-dim);
+      border-radius: 4px;
+      padding: 15px;
+    }
+    
+    .sleep-duration {
+      flex: 1;
+      background-color: rgba(0, 20, 30, 0.6);
+      border: 1px solid var(--terminal-dim);
+      border-radius: 4px;
+      padding: 15px;
+    }
+    
+    .control-header {
+      font-size: 16px;
+      color: var(--terminal-highlight);
+      margin-bottom: 15px;
+      border-bottom: 1px dashed var(--terminal-dim);
+      padding-bottom: 5px;
+    }
+    
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+    
+    .status-label {
+      color: var(--terminal-dim);
+    }
+    
+    .status-value {
+      color: var(--terminal-text);
+      font-weight: bold;
+    }
+    
+    .status-value.optimal {
+      color: var(--terminal-highlight);
+    }
+    
+    .status-value.warning {
+      color: var(--terminal-warning);
+    }
+    
+    .status-value.danger {
+      color: var(--terminal-danger);
+    }
+    
+    .duration-presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    
+    .duration-preset {
+      background-color: var(--terminal-header);
+      border: 1px solid var(--terminal-dim);
+      color: var(--terminal-text);
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 14px;
+    }
+    
+    .duration-preset:hover {
+      background-color: var(--terminal-dim);
+      box-shadow: 0 0 5px var(--terminal-glow);
+    }
+    
+    .duration-preset.active {
+      border-color: var(--terminal-highlight);
+      color: var(--terminal-highlight);
+      box-shadow: 0 0 5px var(--terminal-glow);
+    }
+    
+    .custom-duration {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .custom-duration-label {
+      color: var(--terminal-dim);
+      font-size: 14px;
+    }
+    
+    .custom-duration-input {
+      flex: 1;
+      background-color: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--terminal-dim);
+      color: var(--terminal-text);
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 14px;
+    }
+    
+    .custom-duration-input:focus {
+      outline: none;
+      border-color: var(--terminal-highlight);
+      box-shadow: 0 0 5px var(--terminal-glow);
+    }
+    
+    .sleep-pod-visualization {
+      flex: 1;
+      background-color: rgba(0, 20, 30, 0.6);
+      border: 1px solid var(--terminal-dim);
+      border-radius: 4px;
+      padding: 15px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .pod-header {
+      font-size: 16px;
+      color: var(--terminal-highlight);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px dashed var(--terminal-dim);
+      padding-bottom: 5px;
+      margin-bottom: 5px;
+    }
+    
+    .pod-animation-container {
+      position: relative;
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+    
+    .sleep-pod {
+      width: 60%;
+      height: 70%;
+      background-color: rgba(0, 34, 51, 0.8);
+      border: 2px solid var(--terminal-dim);
+      border-radius: 20px;
+      position: relative;
+      box-shadow: 0 0 15px rgba(51, 204, 255, 0.2);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+    
+    .pod-interior {
+      width: 85%;
+      height: 80%;
+      background-color: rgba(0, 5, 7, 0.5);
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .pod-person {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 70%;
+      height: 65%;
+      background-color: rgba(51, 204, 255, 0.2);
+      border-radius: 30px;
+      box-shadow: 0 0 20px var(--terminal-text);
+      animation: breathe 4s infinite ease-in-out;
+    }
+    
+    @keyframes breathe {
+      0% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+      50% { transform: translate(-50%, -50%) scale(1.03); opacity: 0.8; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+    }
+    
+    .pod-controls {
+      position: absolute;
+      bottom: 5%;
+      left: 5%;
+      width: 30%;
+      height: 15%;
+      background-color: rgba(0, 34, 51, 0.8);
+      border: 1px solid var(--terminal-dim);
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .pod-display {
+      position: absolute;
+      top: 5%;
+      right: 5%;
+      width: 30%;
+      height: 15%;
+      background-color: rgba(0, 34, 51, 0.8);
+      border: 1px solid var(--terminal-dim);
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'VT323', monospace;
+      font-size: 12px;
+      color: var(--terminal-highlight);
+    }
+    
+    .pod-light {
+      position: absolute;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background-color: var(--terminal-highlight);
+      box-shadow: 0 0 5px var(--terminal-highlight);
+    }
+    
+    .pod-light-1 {
+      top: 15%;
+      left: 5%;
+      animation: blink 2s infinite;
+    }
+    
+    .pod-light-2 {
+      top: 15%;
+      right: 5%;
+      animation: blink 3s infinite 1s;
+    }
+    
+    .pod-light-3 {
+      bottom: 15%;
+      left: 5%;
+      animation: blink 2.5s infinite 0.5s;
+    }
+    
+    .pod-light-4 {
+      bottom: 15%;
+      right: 5%;
+      animation: blink 4s infinite 1.5s;
+    }
+    
+    .pod-environment {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    
+    .sleep-wave {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 200%;
+      height: 100%;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent,
+        rgba(51, 204, 255, 0.05) 50%,
+        transparent 100%
+      );
+      animation: wave 8s linear infinite;
+    }
+    
+    @keyframes wave {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    
+    .vitals-container {
+      width: 100%;
+      display: flex;
+      gap: 10px;
+    }
+    
+    .vital-monitor {
+      flex: 1;
+      background-color: rgba(0, 20, 30, 0.6);
+      border: 1px solid var(--terminal-dim);
+      border-radius: 4px;
+      padding: 10px;
+    }
+    
+    .vital-header {
+      font-size: 14px;
+      color: var(--terminal-highlight);
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    
+    .vital-graph {
+      height: 50px;
+      margin-bottom: 5px;
+      position: relative;
+      background-color: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--terminal-dim);
+      overflow: hidden;
+    }
+    
+    .heart-rate-line {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    
+    .brain-wave-line {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    
+    .vital-value {
+      font-size: 16px;
+      color: var(--terminal-text);
+      text-align: center;
+      font-weight: bold;
+    }
+    
+    .heart-rate {
+      color: var(--terminal-highlight);
+    }
+    
+    .brain-activity {
+      color: var(--terminal-highlight);
+    }
+    
+    .rest-quality {
+      color: var(--terminal-highlight);
+    }
+    
+    .button-container {
+      display: flex;
+      gap: 15px;
+      margin-top: 15px;
+    }
+    
+    .sleep-button {
+      flex: 1;
+      background-color: rgba(85, 255, 170, 0.2);
+      border: 1px solid var(--terminal-highlight);
+      color: var(--terminal-highlight);
+      padding: 12px;
+      border-radius: 4px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+    
+    .sleep-button:hover {
+      background-color: rgba(85, 255, 170, 0.3);
+      box-shadow: 0 0 10px var(--terminal-glow);
+    }
+    
+    .cancel-button {
+      flex: 1;
+      background-color: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--terminal-dim);
+      color: var(--terminal-text);
+      padding: 12px;
+      border-radius: 4px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+    
+    .cancel-button:hover {
+      background-color: rgba(0, 0, 0, 0.3);
+      border-color: var(--terminal-text);
+      box-shadow: 0 0 5px var(--terminal-glow);
+    }
+    
+    .terminal-footer {
+      background-color: var(--terminal-header);
+      padding: 10px 15px;
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid var(--terminal-border);
+    }
+    
+    .footer-status {
+      font-size: 14px;
+      color: var(--terminal-dim);
+    }
+    
+    .footer-tip {
+      font-size: 14px;
+      color: var(--terminal-text);
+    }
+  </style>
+</head>
+<body>
+  <div class="terminal">
+    <div class="terminal-inner">
+      <div class="terminal-header">
+        <div class="terminal-header-text">SLEEP POD CONTROL SYSTEM v2.15</div>
+        <div class="terminal-time">T+02:04:37:12</div>
+      </div>
+      
+      <div class="terminal-content">
+        <div class="sleep-pod-container">
+          <div class="sleep-pod-controls">
+            <div class="sleep-pod-status">
+              <div class="control-header">POD STATUS</div>
+              <div class="status-row">
+                <span class="status-label">CURRENT STATE:</span>
+                <span class="status-value optimal">READY</span>
+              </div>
+              <div class="status-row">
+                <span class="status-label">ATMOSPHERE:</span>
+                <span class="status-value optimal">98% OPTIMAL</span>
+              </div>
+              <div class="status-row">
+                <span class="status-label">TEMPERATURE:</span>
+                <span class="status-value optimal">294K (NOMINAL)</span>
+              </div>
+              <div class="status-row">
+                <span class="status-label">FIELD INTEGRITY:</span>
+                <span class="status-value optimal">100%</span>
+              </div>
+              <div class="status-row">
+                <span class="status-label">PLAYER NEED:</span>
+                <span class="status-value warning">REST: 42%</span>
+              </div>
+            </div>
+            
+            <div class="sleep-duration">
+              <div class="control-header">SLEEP DURATION</div>
+              <div class="duration-presets">
+                <div class="duration-preset">2 HOURS</div>
+                <div class="duration-preset">4 HOURS</div>
+                <div class="duration-preset active">6 HOURS</div>
+                <div class="duration-preset">8 HOURS</div>
+              </div>
+              <div class="custom-duration">
+                <span class="custom-duration-label">CUSTOM:</span>
+                <input type="text" class="custom-duration-input" placeholder="Enter hours..." value="6.0">
+              </div>
+              <div class="status-row" style="margin-top: 15px;">
+                <span class="status-label">ESTIMATED RECOVERY:</span>
+                <span class="status-value optimal">97%</span>
+              </div>
+              <div class="status-row">
+                <span class="status-label">WAKE TIME:</span>
+                <span class="status-value">08:04:37</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="sleep-pod-visualization">
+            <div class="pod-header">
+              <span>POD VISUALIZATION</span>
+              <span class="status-value optimal">READY FOR SLEEP CYCLE</span>
+            </div>
+            
+            <div class="pod-animation-container">
+              <div class="sleep-pod">
+                <div class="pod-interior">
+                  <div class="pod-person"></div>
+                  <div class="pod-controls"></div>
+                  <div class="pod-display">REST: 42%</div>
+                  <div class="pod-light pod-light-1"></div>
+                  <div class="pod-light pod-light-2"></div>
+                  <div class="pod-light pod-light-3"></div>
+                  <div class="pod-light pod-light-4"></div>
+                </div>
+                <div class="pod-environment">
+                  <div class="sleep-wave"></div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="vitals-container">
+              <div class="vital-monitor">
+                <div class="vital-header">HEART RATE</div>
+                <div class="vital-graph">
+                  <svg class="heart-rate-line" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <path d="M0,50 L8,50 L10,20 L12,80 L14,50 L20,50 L22,50 L24,20 L26,80 L28,50 L34,50 L36,50 L38,20 L40,80 L42,50 L48,50 L50,50 L52,20 L54,80 L56,50 L62,50 L64,50 L66,20 L68,80 L70,50 L76,50 L78,50 L80,20 L82,80 L84,50 L90,50 L92,50 L94,20 L96,80 L98,50 L100,50" stroke="rgba(85, 255, 170, 0.8)" stroke-width="1.5" fill="none" />
+                  </svg>
+                </div>
+                <div class="vital-value heart-rate">72 BPM</div>
+              </div>
+              
+              <div class="vital-monitor">
+                <div class="vital-header">BRAIN ACTIVITY</div>
+                <div class="vital-graph">
+                  <svg class="brain-wave-line" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <path d="M0,50 C5,40 10,60 15,50 C20,40 25,60 30,50 C35,40 40,60 45,50 C50,40 55,60 60,50 C65,40 70,60 75,50 C80,40 85,60 90,50 C95,40 100,60 100,50" stroke="rgba(51, 204, 255, 0.8)" stroke-width="1.5" fill="none" />
+                  </svg>
+                </div>
+                <div class="vital-value brain-activity">ALERT</div>
+              </div>
+              
+              <div class="vital-monitor">
+                <div class="vital-header">REST QUALITY</div>
+                <div class="vital-graph">
+                  <svg class="brain-wave-line" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <rect x="0" y="30" width="20" height="40" fill="rgba(85, 255, 170, 0.4)" />
+                    <rect x="20" y="20" width="20" height="60" fill="rgba(85, 255, 170, 0.5)" />
+                    <rect x="40" y="10" width="20" height="80" fill="rgba(85, 255, 170, 0.6)" />
+                    <rect x="60" y="10" width="20" height="80" fill="rgba(85, 255, 170, 0.7)" />
+                    <rect x="80" y="5" width="20" height="90" fill="rgba(85, 255, 170, 0.8)" />
+                  </svg>
+                </div>
+                <div class="vital-value rest-quality">PROJECTED: EXCELLENT</div>
+              </div>
+            </div>
+            
+            <div class="button-container">
+              <div class="sleep-button">INITIATE SLEEP CYCLE</div>
+              <div class="cancel-button">CANCEL</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="terminal-footer">
+        <div class="footer-status">SAFETY SYSTEMS: OPTIMAL • LAST MAINTENANCE: 3D AGO</div>
+        <div class="footer-tip">TIP: REST QUALITY IMPROVES BY ADDRESSING ALERTS BEFORE SLEEP</div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Simple interactions for the mockup
+    
+    // Duration preset buttons
+    document.querySelectorAll('.duration-preset').forEach(button => {
+      button.addEventListener('click', () => {
+        // Remove active class from all presets
+        document.querySelectorAll('.duration-preset').forEach(btn => {
+          btn.classList.remove('active');
+        });
+        
+        // Add active class to clicked button
+        button.classList.add('active');
+        
+        // Update custom duration input
+        const hours = button.textContent.split(' ')[0];
+        document.querySelector('.custom-duration-input').value = hours + '.0';
+        
+        // Update wake time (very simple calculation for mockup)
+        const wakeHour = (2 + parseInt(hours)) % 24; // Current hour is 02
+        document.querySelector('.sleep-duration .status-value:last-child').textContent = 
+          `${wakeHour.toString().padStart(2, '0')}:04:37`;
+      });
+    });
+    
+    // Custom duration input
+    const customInput = document.querySelector('.custom-duration-input');
+    customInput.addEventListener('input', () => {
+      // Remove active class from all presets
+      document.querySelectorAll('.duration-preset').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      // Very simple validation
+      let hours = parseFloat(customInput.value) || 0;
+      hours = Math.min(Math.max(hours, 0), 24); // Clamp between 0-24
+      
+      // Update wake time (very simple calculation for mockup)
+      const wakeHour = (2 + Math.floor(hours)) % 24; // Current hour is 02
+      document.querySelector('.sleep-duration .status-value:last-child').textContent = 
+        `${wakeHour.toString().padStart(2, '0')}:04:37`;
+    });
+    
+    // Sleep button animation
+    const sleepButton = document.querySelector('.sleep-button');
+    sleepButton.addEventListener('click', () => {
+      sleepButton.textContent = "SLEEP CYCLE INITIATED";
+      sleepButton.style.backgroundColor = "rgba(85, 255, 170, 0.4)";
+      
+      // Make the person pulse more slowly
+      document.querySelector('.pod-person').style.animation = "breathe 8s infinite ease-in-out";
+      
+      // Change the brain activity
+      document.querySelector('.brain-activity').textContent = "DEEP SLEEP";
+      
+      // Change heart rate
+      document.querySelector('.heart-rate').textContent = "58 BPM";
+    });
+    
+    // Cancel button
+    document.querySelector('.cancel-button').addEventListener('click', () => {
+      // Reset the sleep button
+      sleepButton.textContent = "INITIATE SLEEP CYCLE";
+      sleepButton.style.backgroundColor = "rgba(85, 255, 170, 0.2)";
+      
+      // Reset the person animation
+      document.querySelector('.pod-person').style.animation = "breathe 4s infinite ease-in-out";
+      
+      // Reset the brain activity
+      document.querySelector('.brain-activity').textContent = "ALERT";
+      
+      // Reset heart rate
+      document.querySelector('.heart-rate').textContent = "72 BPM";
+    });
+  </script>
+</body>
+</html>
