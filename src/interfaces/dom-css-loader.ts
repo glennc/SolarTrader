@@ -1,60 +1,80 @@
 /**
- * Utility functions for dynamically managing CSS stylesheets
+ * Utility class for dynamically loading and unloading CSS files in the DOM.
  */
+export class DOMCSSLoader {
+  private loadedStylesheets: Map<string, HTMLLinkElement> = new Map();
 
-/**
- * Map to track loaded CSS by ID to prevent duplicate loading
- */
-const loadedStylesheets = new Map<string, HTMLLinkElement>();
-
-/**
- * Dynamically loads a CSS file only when needed
- * @param cssPath The path to the CSS file
- * @param id Unique identifier for this stylesheet
- * @returns The created link element
- */
-export function loadStylesheet(cssPath: string, id: string): HTMLLinkElement {
-    // If already loaded, return the existing element
-    if (loadedStylesheets.has(id)) {
-        return loadedStylesheets.get(id)!;
+  /**
+   * Loads a CSS file into the document head.
+   * @param cssPath Path to the CSS file
+   * @param id Identifier for the stylesheet
+   * @returns True if successful, false if already loaded
+   */
+  loadCSS(cssPath: string, id: string): boolean {
+    // Check if already loaded
+    if (this.loadedStylesheets.has(id)) {
+      console.log(`CSS already loaded: ${id}`);
+      return false;
     }
 
-    // Create a new link element
-    const linkElement = document.createElement('link');
-    linkElement.rel = 'stylesheet';
-    linkElement.href = cssPath;
-    linkElement.id = `css-${id}`;
-    
+    // Create link element
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = cssPath;
+    link.id = `css-${id}`;
+
     // Add to document head
-    document.head.appendChild(linkElement);
+    document.head.appendChild(link);
     
     // Store reference
-    loadedStylesheets.set(id, linkElement);
+    this.loadedStylesheets.set(id, link);
+    console.log(`CSS loaded: ${id}`);
     
-    return linkElement;
-}
+    return true;
+  }
 
-/**
- * Unloads a CSS file when no longer needed
- * @param id The identifier of the stylesheet to unload
- */
-export function unloadStylesheet(id: string): void {
-    if (loadedStylesheets.has(id)) {
-        const linkElement = loadedStylesheets.get(id)!;
-        linkElement.remove();
-        loadedStylesheets.delete(id);
+  /**
+   * Unloads a CSS file from the document head.
+   * @param id Identifier for the stylesheet
+   * @returns True if successful, false if not found
+   */
+  unloadCSS(id: string): boolean {
+    const link = this.loadedStylesheets.get(id);
+    
+    if (!link) {
+      console.log(`CSS not loaded: ${id}`);
+      return false;
     }
-}
+    
+    // Remove from document
+    link.remove();
+    
+    // Remove from map
+    this.loadedStylesheets.delete(id);
+    console.log(`CSS unloaded: ${id}`);
+    
+    return true;
+  }
 
-/**
- * Preloads a stylesheet without actually applying it
- * Useful for reducing delay when a stylesheet will be needed soon
- * @param cssPath The path to the CSS file
- */
-export function preloadStylesheet(cssPath: string): void {
-    const linkElement = document.createElement('link');
-    linkElement.rel = 'preload';
-    linkElement.href = cssPath;
-    linkElement.as = 'style';
-    document.head.appendChild(linkElement);
+  /**
+   * Checks if a CSS file is loaded.
+   * @param id Identifier for the stylesheet
+   * @returns True if loaded, false if not
+   */
+  isLoaded(id: string): boolean {
+    return this.loadedStylesheets.has(id);
+  }
+
+  /**
+   * Unloads all loaded CSS files.
+   */
+  unloadAll(): void {
+    this.loadedStylesheets.forEach((link, id) => {
+      link.remove();
+      console.log(`CSS unloaded: ${id}`);
+    });
+    
+    this.loadedStylesheets.clear();
+  }
 }

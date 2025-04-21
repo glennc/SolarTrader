@@ -5,6 +5,7 @@ import './styles.css';
 import { InterfaceManager } from './src/managers/interface-manager';
 import { WorldManager } from './src/managers/world-manager';
 import { CommandParser } from './src/managers/command-parser';
+import { TimeManager } from './src/managers/time-manager';
 import { DOMRenderer } from './src/interfaces/dom-renderer';
 import { FirstPersonView } from './src/interfaces/first-person-view';
 import { createShip } from './src/ship-init';
@@ -41,6 +42,7 @@ async function initializeGame(): Promise<void> {
         // Create the game interface components
         const renderer = new DOMRenderer(appContainer);
         const worldManager = new WorldManager();
+        const timeManager = new TimeManager();
         const interfaceManager = new InterfaceManager(renderer);
         
         // Set up the first-person view
@@ -48,7 +50,7 @@ async function initializeGame(): Promise<void> {
         
         // Create and initialize the ship FIRST
         console.log('Creating and initializing ship...');
-        const ship = createShip();
+        const ship = createShip(timeManager, interfaceManager);
         worldManager.loadShip(ship);
         worldManager.setPlayerStartLocation('Bridge');
         console.log('Ship initialized and player placed at Bridge');
@@ -56,6 +58,9 @@ async function initializeGame(): Promise<void> {
         // THEN set up the world manager references
         interfaceManager.setWorldManager(worldManager);
         firstPersonView.setWorldManager(worldManager);
+        
+        // Make the timeManager available to the interface manager
+        interfaceManager.setTimeManager(timeManager);
         
         // THEN register the view with the interface manager
         interfaceManager.registerInterface('first-person', firstPersonView);
@@ -68,6 +73,9 @@ async function initializeGame(): Promise<void> {
         renderer.setCommandHandler((input: string) => {
             commandParser.parse(input);
         });
+        
+        // Start game update loop
+        startGameLoop(timeManager);
         
         // Simulate asset loading
         console.log('Loading game assets...');
@@ -101,6 +109,24 @@ async function initializeGame(): Promise<void> {
         loadingScreen.querySelector('.loading-text')!.textContent = 'Error initializing game. Please refresh the page.';
         throw error;
     }
+}
+
+/**
+ * Starts the main game loop that updates the time manager and other time-dependent systems.
+ * @param timeManager The time manager instance
+ */
+function startGameLoop(timeManager: TimeManager): void {
+    function gameLoop() {
+        // Update time manager
+        timeManager.update();
+        
+        // Schedule next frame
+        requestAnimationFrame(gameLoop);
+    }
+    
+    // Start the loop
+    requestAnimationFrame(gameLoop);
+    console.log('Game loop started');
 }
 
 // UI Elements - Loading Screen

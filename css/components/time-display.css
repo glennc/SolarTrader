@@ -1,0 +1,134 @@
+/* 
+ * Time Display Styles
+ * Used for consistent styling of time displays throughout the game
+ */
+
+.terminal-time {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 1.1em;
+  color: var(--terminal-highlight, #55ffaa);
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 5px rgba(85, 255, 170, 0.4);
+  user-select: none;
+  animation: time-blink 2s infinite;
+}
+
+.terminal-time.large {
+  font-size: 1.4em;
+  font-weight: bold;
+}
+
+.terminal-time.small {
+  font-size: 0.9em;
+  opacity: 0.9;
+}
+
+.terminal-time.critical {
+  color: var(--terminal-danger, #ff3355);
+  text-shadow: 0 0 5px rgba(255, 51, 85, 0.4);
+  animation: time-pulse 1s infinite;
+}
+
+.terminal-time.warning {
+  color: var(--terminal-warning, #ffcc00);
+  text-shadow: 0 0 5px rgba(255, 204, 0, 0.4);
+}
+
+/* Time elapsed/remaining container */
+.time-display {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  background-color: rgba(0, 10, 15, 0.6);
+  border: 1px solid var(--terminal-dim, #115566);
+  border-radius: 4px;
+  padding: 0.5em 0.8em;
+  min-width: 150px;
+}
+
+.time-display-header {
+  font-size: 0.8em;
+  color: var(--terminal-text, #33ccff);
+  opacity: 0.8;
+  text-transform: uppercase;
+  border-bottom: 1px dashed var(--terminal-dim, #115566);
+  padding-bottom: 0.3em;
+  margin-bottom: 0.3em;
+}
+
+.time-display-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9em;
+}
+
+.time-display-label {
+  color: var(--terminal-dim, #115566);
+}
+
+.time-display-value {
+  font-weight: bold;
+}
+
+.time-acceleration-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 10, 15, 0.6);
+  border: 1px solid var(--terminal-dim, #115566);
+  border-radius: 3px;
+  padding: 0.1em 0.4em;
+  margin-left: 0.5em;
+  font-size: 0.8em;
+  color: var(--terminal-highlight, #55ffaa);
+}
+
+/* Time skip progress bar */
+.time-skip-progress {
+  height: 3px;
+  width: 100%;
+  background-color: var(--terminal-dim, #115566);
+  margin-top: 0.5em;
+  position: relative;
+  overflow: hidden;
+}
+
+.time-skip-progress-bar {
+  height: 100%;
+  background-color: var(--terminal-highlight, #55ffaa);
+  box-shadow: 0 0 5px rgba(85, 255, 170, 0.4);
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: width 0.2s linear;
+}
+
+/* Day/Night cycle indicator */
+.day-night-indicator {
+  width: 1.2em;
+  height: 1.2em;
+  border-radius: 50%;
+  background: linear-gradient(to bottom right, 
+    #ffcc00 0%, #ffcc00 50%, 
+    #001133 50%, #001133 100%);
+  transform: rotate(var(--cycle-rotation, 0deg));
+  margin-left: 0.5em;
+  box-shadow: 0 0 5px rgba(255, 204, 0, 0.3);
+  transition: transform 1s ease;
+}
+
+/* Animations */
+@keyframes time-blink {
+  0% { opacity: 1; }
+  49% { opacity: 1; }
+  50% { opacity: 0.8; }
+  51% { opacity: 1; }
+  100% { opacity: 1; }
+}
+
+@keyframes time-pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; }
+}

@@ -1,18 +1,27 @@
 import { Ship } from './core/ship';
 import { Compartment } from './core/compartment';
 import { 
-    bridgeObjects, 
-    engineRoomObjects, 
-    cargoHoldObjects, 
-    livingQuartersObjects, 
-    maintenanceBayObjects 
+    setManagers,
+    createCompartmentObjects
 } from './data/compartment-definitions';
+import { TimeManager } from './managers/time-manager';
+import { InterfaceManager } from './managers/interface-manager';
 
 /**
  * Creates and initializes the player's ship with all compartments and objects.
  * This centralized initialization makes it easy to modify the ship's layout.
  */
-export function createShip(): Ship {
+export function createShip(
+    timeManager: TimeManager, 
+    interfaceManager: InterfaceManager
+): Ship {
+    // Set required managers for interactive objects - use the CSS loader from interface manager
+    setManagers(timeManager, interfaceManager.getCSSLoader(), interfaceManager);
+    
+    // Create compartment objects with proper dependencies
+    const { bridgeObjects, engineRoomObjects, cargoHoldObjects, 
+            livingQuartersObjects, maintenanceBayObjects } = createCompartmentObjects();
+    
     // Create the ship
     const ship = new Ship('Solar Clipper Mk. I', 'A reliable light cargo vessel designed for efficient transport across the solar system.');
     

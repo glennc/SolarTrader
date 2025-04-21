@@ -1,7 +1,6 @@
 import { BaseInteractableObject } from '../core/interactable-object';
-import { DOMRenderer } from '../interfaces/dom-renderer';
 import { InterfaceManager } from '../managers/interface-manager';
-import { loadStylesheet, unloadStylesheet } from './dom-css-loader';
+import { DOMCSSLoader } from './dom-css-loader';
 
 /**
  * Interface for objects that can display a dedicated system interface
@@ -10,10 +9,9 @@ import { loadStylesheet, unloadStylesheet } from './dom-css-loader';
 export interface SystemInterface {
     /**
      * Renders this system's interface to the DOM
-     * @param renderer The DOM renderer to use
      * @returns A function to call when exiting the interface
      */
-    renderInterface(renderer: DOMRenderer): () => void;
+    renderInterface(): () => void;
 }
 
 /**
@@ -22,6 +20,7 @@ export interface SystemInterface {
 export abstract class BaseSystemInterface extends BaseInteractableObject implements SystemInterface {
     protected interfaceManager: InterfaceManager | null = null;
     protected loadedStylesheetId: string | null = null;
+    protected cssLoader: DOMCSSLoader = new DOMCSSLoader();
     
     /**
      * Sets the interface manager reference
@@ -36,7 +35,7 @@ export abstract class BaseSystemInterface extends BaseInteractableObject impleme
      * @param id Unique identifier for the stylesheet
      */
     protected loadInterfaceCSS(cssPath: string, id: string): void {
-        loadStylesheet(cssPath, id);
+        this.cssLoader.loadCSS(cssPath, id);
         this.loadedStylesheetId = id;
     }
     
@@ -45,7 +44,7 @@ export abstract class BaseSystemInterface extends BaseInteractableObject impleme
      */
     protected unloadInterfaceCSS(): void {
         if (this.loadedStylesheetId) {
-            unloadStylesheet(this.loadedStylesheetId);
+            this.cssLoader.unloadCSS(this.loadedStylesheetId);
             this.loadedStylesheetId = null;
         }
     }
@@ -56,7 +55,7 @@ export abstract class BaseSystemInterface extends BaseInteractableObject impleme
      * @param renderer The DOM renderer to use
      * @returns A function to call when exiting the interface
      */
-    abstract renderInterface(renderer: DOMRenderer): () => void;
+    abstract renderInterface(): () => void;
     
     /**
      * Override the default interact method to handle using the system

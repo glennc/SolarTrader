@@ -2,6 +2,8 @@ import { UserInterface } from '../interfaces/base-interface';
 import { DOMRenderer } from '../interfaces/dom-renderer';
 import { SystemInterface } from '../interfaces/system-interfaces';
 import { WorldManager } from './world-manager';
+import { TimeManager } from './time-manager';
+import { DOMCSSLoader } from '../interfaces/dom-css-loader';
 
 /**
  * Manages the active user interface (view) and coordinates rendering.
@@ -12,7 +14,9 @@ export class InterfaceManager {
     private interfaces: Map<string, UserInterface>;
     public renderer: DOMRenderer;
     private worldManager: WorldManager | null; // To provide context to the interface
+    private timeManager: TimeManager | null; // To provide time management to interfaces
     private cleanupFunction: (() => void) | null = null;
+    private cssLoader: DOMCSSLoader;
 
     constructor(renderer: DOMRenderer) {
         this.activeInterface = null;
@@ -20,6 +24,8 @@ export class InterfaceManager {
         this.interfaces = new Map<string, UserInterface>();
         this.renderer = renderer;
         this.worldManager = null;
+        this.timeManager = null;
+        this.cssLoader = new DOMCSSLoader();
         console.log("InterfaceManager initialized.");
     }
 
@@ -28,6 +34,27 @@ export class InterfaceManager {
      */
     setWorldManager(worldManager: WorldManager): void {
         this.worldManager = worldManager;
+    }
+
+    /**
+     * Sets the time manager reference
+     */
+    setTimeManager(timeManager: TimeManager): void {
+        this.timeManager = timeManager;
+    }
+
+    /**
+     * Gets the time manager instance
+     */
+    getTimeManager(): TimeManager | null {
+        return this.timeManager;
+    }
+
+    /**
+     * Gets the CSS loader instance
+     */
+    getCSSLoader(): DOMCSSLoader {
+        return this.cssLoader;
     }
 
     /**
@@ -81,15 +108,70 @@ export class InterfaceManager {
         // Store the current system interface
         this.activeSystemInterface = system;
         
+        // Create interface container if it doesn't exist
+        let interfaceContainer = document.getElementById('interface-container');
+        if (!interfaceContainer) {
+            interfaceContainer = document.createElement('div');
+            interfaceContainer.id = 'interface-container';
+            
+            // Find the terminal container to append the interface container
+            const terminalContainer = document.querySelector('.terminal-container');
+            if (terminalContainer) {
+                terminalContainer.appendChild(interfaceContainer);
+                console.log("InterfaceManager: Created interface container");
+            } else {
+                console.error("InterfaceManager: Cannot find terminal container");
+                return;
+            }
+        }
+        
         // Expand the terminal container for system interface mode
         const terminalContainer = document.querySelector('.terminal-container');
         if (terminalContainer) {
             terminalContainer.classList.add('system-mode');
         }
         
+        // If system needs TimeManager, provide it before rendering
+        if ('setTimeManager' in system && this.timeManager) {
+            (system as any).setTimeManager(this.timeManager);
+        }
+        
+        // If system needs CSSLoader, provide it before rendering
+        if ('setCssLoader' in system) {
+            (system as any).setCssLoader(this.cssLoader);
+        }
+        
+        // Hide the terminal output and input temporarily
+        const terminalOutput = document.querySelector('.terminal-output');
+        const terminalInputLine = document.querySelector('.terminal-input-line');
+        
+        if (terminalOutput) {
+            (terminalOutput as HTMLElement).style.display = 'none';
+        }
+        
+        if (terminalInputLine) {
+            (terminalInputLine as HTMLElement).style.display = 'none';
+        }
+        
         // Render the system interface
-        const cleanup = system.renderInterface(this.renderer);
-        this.cleanupFunction = cleanup;
+        const cleanup = system.renderInterface();
+        this.cleanupFunction = () => {
+            if (cleanup) cleanup();
+            
+            // Restore terminal output and input
+            if (terminalOutput) {
+                (terminalOutput as HTMLElement).style.display = '';
+            }
+            
+            if (terminalInputLine) {
+                (terminalInputLine as HTMLElement).style.display = '';
+            }
+            
+            // Remove interface container content
+            if (interfaceContainer) {
+                interfaceContainer.innerHTML = '';
+            }
+        };
         
         console.log(`InterfaceManager: Showing system interface.`);
     }

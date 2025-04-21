@@ -5,23 +5,22 @@ This document outlines the prioritized tasks to create a minimum viable product 
 ## 1. Core Game Systems
 
 ### 1.1 Time System
-- [ ] Implement `src/managers/time-manager.ts` with:
+- [x] Implement `src/managers/time-manager.ts` with:
   - Game clock that advances in real-time with configurable acceleration rates
   - Support for time-skip functionality (using time_skip_mockup.htm as reference)
   - Day/night cycle tracking with appropriate UI indicators
   - Methods for systems to register time-dependent events
-- [ ] Create time display component that shows both elapsed time and ETA to destination
-- [ ] Add `terminal-time` class animations for all time displays across different interfaces
-- [ ] Implement event scheduling in `src/managers/event-manager.ts` that triggers:
+- [x] Create time display component that shows both elapsed time and ETA to destination
+- [x] Add `terminal-time` class animations for all time displays across different interfaces
+- [x] Implement event scheduling in `src/managers/event-manager.ts` that triggers:
   - Random technical failures based on time and system condition
   - Space phenomena that affect ship systems
   - Personal events (dreams, memories, messages)
 
 ### 1.2 Travel System
 - [ ] Define star map data in `src/data/location-definitions.ts` with:
-  - Origin (Earth Orbital Station)
-  - Destination (Alpha Centauri - fixed and cannot be changed during transit)
-  - Intermediate navigation points
+  - Origin (Dunsany Roads Station)
+  - Destination (St Cloud Orbital - fixed and cannot be changed during transit)
   - Distance calculations based on light years
 - [ ] Implement travel mechanics in `src/systems/propulsion.ts` with:
   - Velocity calculations (shown as fraction of light speed)
@@ -38,7 +37,7 @@ This document outlines the prioritized tasks to create a minimum viable product 
 
 ### 1.3 Game State Management
 - [ ] Implement initial game state in `src/core/game-state.ts` that:
-  - Initializes ship already in transit as per brief.md
+  - Initializes ship already in transit between Dunsany Roads and Port Newmar as per brief.md
   - Sets up initial system conditions (some with minor issues to address)
   - Establishes player starting needs values
 - [ ] Create destination arrival detection in `src/managers/world-manager.ts` that:

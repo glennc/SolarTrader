@@ -1,53 +1,44 @@
 import { BaseInteractableObject } from '../core/interactable-object';
 import { CoolantSystemInterface } from '../interfaces/systems/coolant-system-interface';
 import { SystemDiagnosticsInterface } from '../interfaces/systems/system-diagnostics-interface';
+import { SleepPod } from '../core/objects/sleep-pod';
+import { TimeManager } from '../managers/time-manager';
+import { DOMCSSLoader } from '../interfaces/dom-css-loader';
+import { InterfaceManager } from '../managers/interface-manager';
+
+// We'll set these when ship-init.ts calls createCompartmentObjects
+let timeManager: TimeManager | null = null;
+let cssLoader: DOMCSSLoader | null = null;
+let interfaceManager: InterfaceManager | null = null;
 
 /**
- * Placeholder for defining individual compartments.
- * This could evolve into a more structured format (e.g., JSON, classes).
- * For now, it's just a conceptual placeholder.
+ * Set the managers needed for interactive objects.
+ * Must be called before accessing the object arrays.
  */
-
-// Example structure (not used directly yet):
-/*
-export interface CompartmentDefinition {
-    name: string;
-    description: string;
-    exits: { [direction: string]: string }; // Direction -> Target Compartment Name
+export function setManagers(
+  tm: TimeManager,
+  css: DOMCSSLoader,
+  im: InterfaceManager
+): void {
+  timeManager = tm;
+  cssLoader = css;
+  interfaceManager = im;
+  console.log("Compartment definitions: Managers have been set");
 }
 
-export const compartmentDefinitions: { [key: string]: CompartmentDefinition } = {
-    "Bridge": {
-        name: "Bridge",
-        description: "The command center of the ship. Consoles hum quietly.",
-        exits: { "south": "Corridor" }
-    },
-    "Corridor": {
-        name: "Corridor",
-        description: "A narrow metal corridor.",
-        exits: { "north": "Bridge", "east": "Engineering", "west": "CargoHold" }
-    },
-    "Engineering": {
-        name: "Engineering",
-        description: "The engine room, filled with the thrum of machinery.",
-        exits: { "west": "Corridor" }
-    },
-    "CargoHold": {
-        name: "Cargo Hold",
-        description: "A large, mostly empty space for cargo.",
-        exits: { "east": "Corridor" }
-    }
-};
-*/
-
-console.log("Placeholder: src/data/compartment-definitions.ts loaded.");
-
 /**
- * Predefined interactable objects for ship compartments
+ * Create compartment objects with the required dependencies.
+ * This ensures all interactive objects have the managers they need.
  */
-
-// Bridge objects
-export const bridgeObjects = [
+export function createCompartmentObjects() {
+  if (!timeManager || !cssLoader || !interfaceManager) {
+    console.error("Compartment definitions: Managers not set before creating objects");
+    return { bridgeObjects: [], engineRoomObjects: [], cargoHoldObjects: [], 
+             livingQuartersObjects: [], maintenanceBayObjects: [] };
+  }
+  
+  // Bridge objects
+  const bridgeObjects = [
     new BaseInteractableObject(
         'Nav Console',
         'Ship navigation and steering controls.',
@@ -77,10 +68,10 @@ export const bridgeObjects = [
     
     // Replace the basic diagnostics panel with our interactive system diagnostics interface
     new SystemDiagnosticsInterface()
-];
+  ];
 
-// Engine Room objects
-export const engineRoomObjects = [
+  // Engine Room objects
+  const engineRoomObjects = [
     new BaseInteractableObject(
         'Power Control Panel',
         'Controls power distribution throughout the ship.',
@@ -110,10 +101,10 @@ export const engineRoomObjects = [
     
     // Replace the basic coolant valves with our new interactive coolant system
     new CoolantSystemInterface()
-];
+  ];
 
-// Cargo Hold objects
-export const cargoHoldObjects = [
+  // Cargo Hold objects
+  const cargoHoldObjects = [
     new BaseInteractableObject(
         'Cargo Manifest Terminal',
         'Tracks and manages cargo inventory.',
@@ -140,17 +131,16 @@ export const cargoHoldObjects = [
         ['containers', 'crates', 'boxes', 'cargo', 'shipment'],
         ['examine', 'look at', 'check', 'inspect']
     )
-];
+  ];
 
-// Living Quarters objects
-export const livingQuartersObjects = [
-    new BaseInteractableObject(
-        'Sleeping Pod',
-        'Compact but comfortable sleeping quarters.',
-        'A space-efficient sleeping pod built into the wall. Despite its small size, the mattress is surprisingly comfortable and the integrated environmental controls allow you to customize temperature and lighting. A small shelf contains some personal items and reading material.',
-        false,
-        ['bed', 'bunk', 'sleep station', 'pod'],
-        ['examine', 'look at', 'use', 'sleep', 'rest']
+  // Living Quarters objects with SleepPod using proper managers
+  const livingQuartersObjects = [
+    new SleepPod(
+      'Sleeping Pod',
+      'A space-efficient sleeping pod built into the wall. Despite its small size, the mattress is surprisingly comfortable and the integrated environmental controls allow you to customize temperature and lighting. A small shelf contains some personal items and reading material.',
+      timeManager,
+      cssLoader,
+      interfaceManager
     ),
     
     new BaseInteractableObject(
@@ -179,10 +169,10 @@ export const livingQuartersObjects = [
         ['pad', 'tablet', 'computer', 'device'],
         ['examine', 'look at', 'use', 'read', 'access', 'check']
     )
-];
+  ];
 
-// Maintenance Bay objects
-export const maintenanceBayObjects = [
+  // Maintenance Bay objects
+  const maintenanceBayObjects = [
     new BaseInteractableObject(
         'Repair Station',
         'Workbench with specialized repair equipment.',
@@ -218,7 +208,12 @@ export const maintenanceBayObjects = [
         ['tools', 'tool kit', 'equipment', 'repair kit'],
         ['examine', 'look at', 'take', 'use', 'open']
     )
-];
+  ];
+
+  return { bridgeObjects, engineRoomObjects, cargoHoldObjects, livingQuartersObjects, maintenanceBayObjects };
+}
+
+console.log("Placeholder: src/data/compartment-definitions.ts loaded.");
 
 // Ensure the file is treated as a module.
 export {};

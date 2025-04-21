@@ -1,4 +1,3 @@
-import { DOMRenderer } from '../dom-renderer';
 import { BaseSystemInterface } from '../base-system-interfaces';
 import { Ship } from '../../core/ship';
 
@@ -47,11 +46,9 @@ export class SystemDiagnosticsInterface extends BaseSystemInterface {
     /**
      * Renders the system diagnostics interface
      */
-    renderInterface(renderer: DOMRenderer): () => void {
+    renderInterface(): () => void {
         // Load the system interfaces CSS
         this.loadInterfaceCSS('/css/system-interfaces.css', 'system-interfaces');
-        
-        renderer.clearOutput();
         
         // Set the terminal container to system mode for expanded view
         const terminalContainer = document.querySelector('.terminal-container');
@@ -59,7 +56,14 @@ export class SystemDiagnosticsInterface extends BaseSystemInterface {
             terminalContainer.classList.add('system-mode');
         }
         
-        this.renderDiagnosticsInterface(renderer);
+        // Get the terminal output element where we'll render our interface
+        const terminalOutput = document.querySelector('.terminal-output');
+        if (terminalOutput) {
+            terminalOutput.innerHTML = '';
+        }
+        
+        // Create the interface directly without using a DOMRenderer
+        this.renderDiagnosticsInterfaceDirectly();
         
         // Return a function that will be called when exiting the interface
         return () => {
@@ -76,9 +80,9 @@ export class SystemDiagnosticsInterface extends BaseSystemInterface {
     }
     
     /**
-     * Renders the diagnostic panel interface
+     * Renders the diagnostic panel interface directly to the DOM without a renderer
      */
-    private renderDiagnosticsInterface(renderer: DOMRenderer): void {
+    private renderDiagnosticsInterfaceDirectly(): void {
         // Check if we're re-rendering an existing interface
         const existingContent = document.querySelector('.terminal-content');
         const isUpdate = !!existingContent && document.body.contains(existingContent);
@@ -120,8 +124,12 @@ export class SystemDiagnosticsInterface extends BaseSystemInterface {
             // Replace the existing content instead of appending
             existingContent.replaceWith(container);
         } else {
-            // Initial render, use the normal updateOutput
-            renderer.updateOutput(container.outerHTML);
+            // Initial render, add to terminal output
+            const terminalOutput = document.querySelector('.terminal-output');
+            if (terminalOutput) {
+                terminalOutput.innerHTML = '';
+                terminalOutput.appendChild(container);
+            }
         }
         
         // Attach event handlers after DOM update

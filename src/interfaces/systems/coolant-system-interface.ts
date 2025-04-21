@@ -1,4 +1,3 @@
-import { DOMRenderer } from '../dom-renderer';
 import { BaseSystemInterface } from '../base-system-interfaces';
 
 /**
@@ -30,11 +29,9 @@ export class CoolantSystemInterface extends BaseSystemInterface {
     /**
      * Renders the coolant system interface
      */
-    renderInterface(renderer: DOMRenderer): () => void {
+    renderInterface(): () => void {
         // Load the coolant system CSS
         this.loadInterfaceCSS('/css/coolant-system.css', 'coolant-system');
-        
-        renderer.clearOutput();
         
         // Set the terminal container to system mode for expanded view
         const terminalContainer = document.querySelector('.terminal-container');
@@ -42,7 +39,14 @@ export class CoolantSystemInterface extends BaseSystemInterface {
             terminalContainer.classList.add('system-mode');
         }
         
-        this.renderCoolantInterface(renderer);
+        // Get the terminal output element where we'll render our interface
+        const terminalOutput = document.querySelector('.terminal-output');
+        if (terminalOutput) {
+            terminalOutput.innerHTML = '';
+        }
+        
+        // Create the interface directly without using a DOMRenderer
+        this.renderCoolantInterfaceDirectly();
         
         // Return a function that will be called when exiting the interface
         return () => {
@@ -59,9 +63,9 @@ export class CoolantSystemInterface extends BaseSystemInterface {
     }
     
     /**
-     * Renders the coolant system status and controls
+     * Renders the coolant system interface directly to the DOM without a renderer
      */
-    private renderCoolantInterface(renderer: DOMRenderer): void {
+    private renderCoolantInterfaceDirectly(): void {
         // Check if we're re-rendering an existing interface
         const existingContent = document.querySelector('.terminal-content');
         const isUpdate = !!existingContent && document.body.contains(existingContent);
@@ -209,8 +213,12 @@ export class CoolantSystemInterface extends BaseSystemInterface {
             // Replace the existing content instead of appending
             existingContent.replaceWith(container);
         } else {
-            // Initial render, use the normal updateOutput
-            renderer.updateOutput(container.outerHTML);
+            // Initial render, add to terminal output
+            const terminalOutput = document.querySelector('.terminal-output');
+            if (terminalOutput) {
+                terminalOutput.innerHTML = '';
+                terminalOutput.appendChild(container);
+            }
         }
         
         // After the HTML is added to the DOM, attach event handlers

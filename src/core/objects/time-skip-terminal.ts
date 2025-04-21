@@ -1,5 +1,7 @@
 import { SpecializedInteractableObject } from './specialized-object';
 import { IShipSystem } from '../../systems/base-system';
+import { TimeSkipInterface } from '../../interfaces/components/time-skip-interface';
+import { InterfaceManager } from '../../managers/interface-manager';
 
 /**
  * Time Skip Terminal - Allows advancing game time rapidly
@@ -11,6 +13,7 @@ export class TimeSkipTerminal extends SpecializedInteractableObject {
     private simulationSpeed: number = 20; // Default: 20x normal speed
     private systemProjections: Map<string, SystemProjection> = new Map();
     private shipSystems: Map<string, IShipSystem> = new Map();
+    protected interfaceManager: InterfaceManager | null = null;
     
     constructor() {
         super(
@@ -32,6 +35,13 @@ export class TimeSkipTerminal extends SpecializedInteractableObject {
     }
     
     /**
+     * Set the interface manager to use when activating the terminal
+     */
+    setInterfaceManager(interfaceManager: InterfaceManager): void {
+        this.interfaceManager = interfaceManager;
+    }
+    
+    /**
      * Handle specialized interactions with the time skip terminal
      */
     protected handleSpecializedInteraction(verb: string): string | null {
@@ -39,11 +49,30 @@ export class TimeSkipTerminal extends SpecializedInteractableObject {
         
         if (verb === 'use' || verb === 'access' || verb === 'activate') {
             if (this.interfaceManager) {
-                // In a full implementation, this would show the time skip interface
-                // For now, we'll just return a description
-                return this.getTimeSkipDescription();
+                const timeManager = this.interfaceManager.getTimeManager();
+                const cssLoader = this.interfaceManager.getCSSLoader();
+                
+                if (timeManager && cssLoader) {
+                    // Create the time skip interface
+                    const timeSkipInterface = new TimeSkipInterface(
+                        document.getElementById('app') || document.body,
+                        timeManager,
+                        this.interfaceManager.renderer,
+                        cssLoader
+                    );
+                    
+                    // Set the interface manager on the time skip interface
+                    timeSkipInterface.setInterfaceManager(this.interfaceManager);
+                    
+                    // Show the time skip interface
+                    this.interfaceManager.showSystemInterface(timeSkipInterface);
+                    return null; // Interface has been shown, don't return a message
+                } else {
+                    return "The time skip terminal appears to be offline. Try again later.";
+                }
             } else {
-                return `You activate the Time Skip Terminal. The screen shows options for accelerated time passage.`;
+                // Use the description method
+                return this.getTimeSkipDescription();
             }
         }
         
