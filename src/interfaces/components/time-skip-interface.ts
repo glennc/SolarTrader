@@ -92,6 +92,15 @@ export class TimeSkipInterface implements SystemInterface {
     this.cssLoader.loadCSS('/css/components/time-display.css', 'time-display');
     this.cssLoader.loadCSS('/css/components/time-skip-interface.css', 'time-skip-interface');
     
+    // Hide the location header to avoid overlap with Time Skip interface
+    // This is specific to this interface and won't affect diagnostics screen
+    const locationElements = document.querySelectorAll('.location-header, .location-display, .terminal-header');
+    locationElements.forEach(element => {
+      if (element) {
+        (element as HTMLElement).style.display = 'none';
+      }
+    });
+    
     // Create terminal container
     const terminalContainer = document.createElement('div');
     terminalContainer.className = 'terminal';
@@ -214,6 +223,14 @@ export class TimeSkipInterface implements SystemInterface {
         this.timeManager.setTimeAcceleration(1);
         this.timeManager.cancelTimeSkip();
       }
+      
+      // Restore the location header elements that we hid
+      const locationElements = document.querySelectorAll('.location-header, .location-display, .terminal-header');
+      locationElements.forEach(element => {
+        if (element) {
+          (element as HTMLElement).style.display = '';
+        }
+      });
       
       // Unload CSS
       this.cssLoader.unloadCSS('time-display');

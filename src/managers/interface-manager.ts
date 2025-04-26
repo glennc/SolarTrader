@@ -149,7 +149,7 @@ export class InterfaceManager {
             (system as any).setInterfaceManager(this);
         }
         
-        // Hide the terminal output and input temporarily
+        // Hide the terminal output and input line temporarily
         const terminalOutput = document.querySelector('.terminal-output');
         const terminalInputLine = document.querySelector('.terminal-input-line');
         
@@ -166,13 +166,17 @@ export class InterfaceManager {
         this.cleanupFunction = () => {
             if (cleanup) cleanup();
             
-            // Restore terminal output and input
+            // Restore terminal output, input, and location header
             if (terminalOutput) {
                 (terminalOutput as HTMLElement).style.display = '';
             }
             
             if (terminalInputLine) {
                 (terminalInputLine as HTMLElement).style.display = '';
+            }
+            
+            if (locationHeader) {
+                (locationHeader as HTMLElement).style.display = '';
             }
             
             // Remove interface container content
